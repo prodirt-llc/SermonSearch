@@ -239,11 +239,9 @@
 
     function cleanText(text) {
         if (!text) return text;
-        // Only remove truly problematic control characters, keep \u0014 for formatting
-        let result = text.replace(/[\u0000-\u0008\u000B-\u0013\u0015-\u001F\u007F-\u009F]/g, '');
-        // Convert \u0014 to newlines for line breaks
-        result = result.replace(/\u0014/g, '\n');
-        // Clean up excessive blank lines but keep paragraph structure
+        // Replace all control characters with newlines to preserve structure
+        let result = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n');
+        // Clean up excessive blank lines
         result = result.replace(/\n\n+/g, '\n\n');
         return result.trim();
     }
