@@ -205,23 +205,23 @@
 
     // High-bit character mapping (legacy encoding)
     const HIGH_BIT_MAP = {
-        '\x81': 'LT',
-        '\x82': 'GT',
-        '\x83': 'TM',
-        '\x84': 'EUR',
-        '\x85': '...',
-        '\x86': '+',
-        '\x87': '++',
-        '\x88': '^',
-        '\x8c': 'OE',
-        '\x91': "'",
-        '\x92': "'",
-        '\x93': '"',
-        '\x94': '"',
-        '\x95': '*',
-        '\x96': '-',
-        '\x97': '--',
-        '\x99': 'TM'
+        '\x81': '[LT]',
+        '\x82': '[GT]',
+        '\x83': '[TM]',
+        '\x84': '[EUR]',
+        '\x85': '[ELLIPSIS]',
+        '\x86': '[DAGGER]',
+        '\x87': '[DDAG]',
+        '\x88': '[CARET]',
+        '\x8c': '[OE]',
+        '\x91': '[QUOTE]',
+        '\x92': '[QUOTE]',
+        '\x93': '[DQUOTE]',
+        '\x94': '[DQUOTE]',
+        '\x95': '[BULLET]',
+        '\x96': '[NDASH]',
+        '\x97': '[MDASH]',
+        '\x99': '[TM]'
     };
 
     function translateHighBit(text) {
