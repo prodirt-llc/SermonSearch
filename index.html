@@ -108,7 +108,7 @@
         mark { background: #f59e0b; color: black; border-radius: 2px; }
 
         .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-        .btn-blue { background: #2563eb; } .btn-gray { background: #475569; } .btn-orange { background: #d97706; } .btn-red { background: #be123c; }
+        .btn-blue { background: #2563eb; } .btn-gray { background: #475569; } .btn-orange { background: #d97706; } .btn-red { background: #be123c; } .btn-green { background: #16a34a; }
 
         /* FILE INDICATOR */
         .file-indicator {
@@ -316,7 +316,7 @@
         const panel = document.getElementById('details-panel');
         
         if(selected) {
-            const displayText = cleanText(selected.words || "");
+            const displayText = selected.words || "";
             const [fileKey, fileIdx] = uid.split('-');
             const fileName = `sermons_${fileKey}.json`;
             
@@ -331,21 +331,21 @@
                 <h1 id="export-title" style="color:#f59e0b; margin-bottom:20px;">${highlight(selected.title, query)}</h1>
                 
                 <div style="margin: 20px 0;">
-                    <div class="section-title">📋 Topics</div>
+                    <div class="section-title">Topics</div>
                     <div class="topics-box">
                         ${(selected.topics || []).map(t => `<span class="tag">${t}</span>`).join('')}
                     </div>
                 </div>
 
                 <div style="margin: 20px 0;">
-                    <div class="section-title">📖 Scripture References</div>
+                    <div class="section-title">Scripture References</div>
                     <div class="scriptures-box">
                         ${(selected.scriptures || []).map(s => `<span class="scripture-ref">${s}</span>`).join('')}
                     </div>
                 </div>
 
                 <div style="margin: 20px 0;">
-                    <div class="section-title">📄 Content</div>
+                    <div class="section-title">Content</div>
                     <div id="sermon-display" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 11pt; color: #e5e7eb;">${highlight(displayText, query)}</div>
                 </div>
             </div>
@@ -371,15 +371,20 @@
         document.execCommand('copy');
         document.body.removeChild(storage);
         
-        // Show green notification
-        const btn = event.target;
-        const oldText = btn.innerText;
-        btn.innerText = '✓ Copied!';
-        btn.style.background = '#16a34a';
-        setTimeout(() => {
-            btn.innerText = oldText;
-            btn.style.background = '';
-        }, 2000);
+        // Show green notification on button
+        const buttons = document.querySelectorAll('.btn');
+        const btn = Array.from(buttons).find(b => b.innerText.includes('Copy'));
+        if (btn) {
+            const oldText = btn.innerText;
+            const oldBg = btn.className;
+            btn.innerText = '✓ Copied!';
+            btn.classList.add('btn-green');
+            btn.classList.remove('btn-gray');
+            setTimeout(() => {
+                btn.innerText = oldText;
+                btn.className = oldBg;
+            }, 2000);
+        }
     }
 
     function exportWord() {
