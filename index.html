@@ -12,106 +12,103 @@
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* HEADER & UI CONTROLS */
-        header { background: #1e293b; padding: 12px 20px; border-bottom: 2px solid #334155; z-index: 100; }
-        .header-flex { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-        .search-area { display: flex; gap: 10px; align-items: center; position: relative; }
+        header { background: #1e293b; padding: 12px 20px; border-bottom: 2px solid #334155; z-index: 1000; }
+        .header-flex { display: flex; align-items: center; justify-content: space-between; }
         
+        .search-controls { display: flex; gap: 10px; align-items: center; }
         input {
             padding: 10px; background: #0f172a; border: 1px solid #475569;
             color: white; border-radius: 6px; font-size: 0.9rem; width: 220px;
         }
 
-        /* SEARCHABLE TOPIC DROPDOWN (Strict Width) */
+        /* TOPIC DROPDOWN FIXED */
         .dropdown-container { position: relative; width: 250px; }
         .dropdown-trigger {
             padding: 10px; background: #0f172a; border: 1px solid #475569;
             border-radius: 6px; cursor: pointer; color: #f1f5f9;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            font-size: 0.9rem;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;
         }
         .dropdown-menu {
             position: absolute; top: 105%; left: 0; width: 100%;
             background: #1e293b; border: 1px solid #475569; border-radius: 6px;
-            max-height: 400px; overflow-y: auto; display: none; z-index: 1000;
+            max-height: 350px; overflow-y: auto; display: none; z-index: 2000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
         .dropdown-menu.show { display: block; }
-        .dropdown-search { width: 100%; border: none; border-bottom: 1px solid #475569; border-radius: 0; position: sticky; top: 0; }
-        .dropdown-item {
-            padding: 10px; cursor: pointer; font-size: 0.85rem;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
+        .dropdown-search { width: 100%; border: none; border-bottom: 1px solid #475569; border-radius: 0; position: sticky; top: 0; z-index: 10; }
+        .dropdown-item { padding: 10px; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid #334155; }
         .dropdown-item:hover { background: #334155; }
 
-        /* LOADING BAR (Orange Fill) */
+        /* LOADING BAR */
         #loading-overlay {
             position: fixed; inset: 0; background: #0f172a;
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
         }
-        .loader-bar { width: 300px; height: 10px; background: #1e293b; border-radius: 10px; margin: 15px; overflow: hidden; border: 1px solid #334155; }
+        .loader-bar { width: 350px; height: 12px; background: #1e293b; border-radius: 20px; margin: 20px; overflow: hidden; border: 1px solid #334155; }
         #progress-fill { width: 0%; height: 100%; background: #f59e0b; transition: width 0.2s; }
 
-        /* SIDEBAR & CONTENT */
+        /* MAIN LAYOUT */
         .main-container { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 350px; min-width: 350px; background: #111827; border-right: 1px solid #334155; display: flex; flex-direction: column; }
+        .sidebar { width: 380px; min-width: 380px; background: #111827; border-right: 1px solid #334155; display: flex; flex-direction: column; }
         .results-list { flex: 1; overflow-y: auto; }
+        
         .result-item {
-            padding: 12px; border-bottom: 1px solid #1e293b; cursor: pointer;
-            display: flex; gap: 12px; align-items: flex-start;
+            padding: 15px; border-bottom: 1px solid #1e293b; cursor: pointer;
+            display: flex; gap: 15px; align-items: flex-start; transition: 0.2s;
         }
         .result-item:hover { background: #1e293b; }
-        .result-item.active { background: #1e3a8a; border-left: 4px solid #f59e0b; }
-        .check-box { width: 18px; height: 18px; margin-top: 3px; cursor: pointer; }
+        .result-item.active { background: #1e3a8a; border-left: 5px solid #f59e0b; }
+        .check-box { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; flex-shrink: 0; }
 
+        /* CONTENT AREA */
         .details-panel { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
-        .action-bar { padding: 12px 25px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; gap: 12px; }
+        .action-bar { padding: 12px 30px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; gap: 15px; }
         .scroll-content { flex: 1; overflow-y: auto; padding: 40px; }
         
-        /* PRESERVING PASTOR'S FORMATTING */
-        #sermon-text-display { 
+        #sermon-display { 
             font-size: 1.6rem; line-height: 1.8; white-space: pre-wrap; 
-            background: #1e293b; padding: 35px; border-radius: 12px; 
-            color: #ffffff; border: 1px solid #334155;
-            tab-size: 4; -moz-tab-size: 4;
+            background: #1e293b; padding: 40px; border-radius: 12px; 
+            color: #ffffff; border: 1px solid #334155; tab-size: 4;
         }
 
-        .btn { padding: 10px 18px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; }
-        .btn-blue { background: #2563eb; } .btn-red { background: #be123c; } .btn-orange { background: #d97706; }
+        mark { background: #f59e0b; color: black; border-radius: 2px; padding: 0 2px; }
+
+        .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; }
+        .btn-blue { background: #2563eb; } .btn-gray { background: #475569; } .btn-orange { background: #d97706; } .btn-red { background: #be123c; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
-        <h2 style="letter-spacing: 2px;">LOADING SERMONS</h2>
+        <h2 style="letter-spacing: 2px;">SYNCING SERMON DATABASE</h2>
         <div class="loader-bar"><div id="progress-fill"></div></div>
-        <div id="load-status" style="color: #94a3b8;">Initializing...</div>
+        <div id="load-status" style="color: #64748b;">Waiting for files...</div>
     </div>
 
     <header>
         <div class="header-flex">
-            <div><h2 style="color:#f59e0b">Sermon Browser</h2><small id="stat-count">0 entries loaded</small></div>
-            <div class="search-area">
-                <input type="text" id="main-search" placeholder="Search keywords...">
+            <div><h2 style="color:#f59e0b">Sermon Browser</h2><small id="stat-count">Ready</small></div>
+            <div class="search-controls">
+                <input type="text" id="main-search" placeholder="Search titles or content...">
                 
                 <div class="dropdown-container">
-                    <div class="dropdown-trigger" id="topic-trigger" onclick="toggleDropdown()">All Topics</div>
+                    <div class="dropdown-trigger" id="topic-trigger" onclick="toggleDropdown()">Filter by Topic</div>
                     <div class="dropdown-menu" id="topic-menu">
-                        <input type="text" id="dropdown-search-input" class="dropdown-search" placeholder="Type to filter topics..." onclick="event.stopPropagation()">
-                        <div id="topic-items-list"></div>
+                        <input type="text" id="topic-search-box" class="dropdown-search" placeholder="Search topics..." onclick="event.stopPropagation()">
+                        <div id="topic-list-target"></div>
                     </div>
                 </div>
 
-                <button class="btn btn-red" onclick="resetAll()">Reset View</button>
+                <button class="btn btn-red" onclick="resetApp()">Reset</button>
             </div>
         </div>
     </header>
 
     <div class="main-container">
         <div class="sidebar"><div class="results-list" id="results-list"></div></div>
-        <div class="details-panel" id="content-panel">
-             <div style="text-align:center; padding-top: 150px; color: #475569;">
-                <h2>Welcome, Pastor.</h2>
-                <p>Select a sermon to begin reading or exporting.</p>
+        <div class="details-panel" id="details-panel">
+            <div style="text-align:center; padding-top: 100px; color: #475569;">
+                <h2>Select a sermon to view content</h2>
             </div>
         </div>
     </div>
@@ -124,13 +121,11 @@
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
         alphabet.push("OTH");
 
-        // CLEANER: Specifically removes those box hieroglyphics but keeps formatting
-        function cleanFormatting(str) {
-            if (!str) return "";
-            return str.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFD]/g, "").trim();
+        function cleanBadChars(str) {
+            return str ? str.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFD]/g, "").trim() : "";
         }
 
-        async function initLoad() {
+        async function loadData() {
             for(let i=0; i<alphabet.length; i++) {
                 try {
                     let r = await fetch(`./sermons_${alphabet[i]}.json`);
@@ -138,35 +133,41 @@
                         let data = await r.json();
                         data.forEach((item, idx) => {
                             item._uid = `${alphabet[i]}-${idx}`;
-                            item.words = cleanFormatting(item.words);
+                            item.words = cleanBadChars(item.words);
                             allEntries.push(item);
                         });
                     }
                 } catch(e){}
                 let pct = ((i+1)/alphabet.length)*100;
                 document.getElementById('progress-fill').style.width = pct+'%';
-                document.getElementById('load-status').innerText = `Processed ${allEntries.length.toLocaleString()} sermons...`;
+                document.getElementById('load-status').innerText = `Syncing: ${allEntries.length.toLocaleString()} entries loaded`;
             }
             allEntries.sort((a,b) => (a.title||"").localeCompare(b.title||""));
-            buildTopicList();
+            populateTopics();
             render();
             document.getElementById('loading-overlay').style.display='none';
         }
 
-        function buildTopicList() {
+        function populateTopics() {
             let topics = new Set();
             allEntries.forEach(e => (e.topics || []).forEach(t => topics.add(t)));
-            let list = document.getElementById('topic-items-list');
+            const target = document.getElementById('topic-list-target');
             Array.from(topics).sort().forEach(t => {
-                let div = document.createElement('div');
-                div.className = 'dropdown-item';
-                div.innerText = t;
-                div.onclick = () => { activeTopic = t; document.getElementById('topic-trigger').innerText = t; toggleDropdown(); render(); };
-                list.appendChild(div);
+                let d = document.createElement('div');
+                d.className = 'dropdown-item';
+                d.innerText = t;
+                d.onclick = () => { activeTopic = t; document.getElementById('topic-trigger').innerText = t; toggleDropdown(); render(); };
+                target.appendChild(d);
             });
         }
 
         function toggleDropdown() { document.getElementById('topic-menu').classList.toggle('show'); }
+
+        function highlight(text, query) {
+            if (!query) return text;
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
 
         function render() {
             const query = document.getElementById('main-search').value.toLowerCase();
@@ -176,90 +177,75 @@
                 return matchQ && matchT;
             });
 
-            document.getElementById('stat-count').innerText = `${filtered.length.toLocaleString()} results found`;
-            let html = '';
-            filtered.slice(0, 300).forEach(e => {
-                html += `<div class="result-item ${selectedUid === e._uid ? 'active' : ''}" onclick="selectSermon('${e._uid}')">
+            document.getElementById('stat-count').innerText = `${filtered.length.toLocaleString()} of ${allEntries.length.toLocaleString()}`;
+
+            let listHtml = '';
+            filtered.slice(0, 250).forEach(e => {
+                listHtml += `<div class="result-item ${selectedUid === e._uid ? 'active' : ''}" onclick="setSelection('${e._uid}')">
                     <input type="checkbox" class="check-box" ${checkedUids.has(e._uid)?'checked':''} onclick="event.stopPropagation(); toggleCheck('${e._uid}')">
                     <div style="overflow:hidden">
-                        <div style="font-weight:bold;white-space:nowrap;text-overflow:ellipsis;overflow:hidden">${e.title}</div>
-                        <div style="font-size:0.75rem; color:#64748b;">${(e.topics || []).slice(0,2).join(', ')}</div>
+                        <div style="font-weight:bold;white-space:nowrap;text-overflow:ellipsis;overflow:hidden">${highlight(e.title, query)}</div>
+                        <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">${(e.topics || []).slice(0,2).join(' | ')}</div>
                     </div>
                 </div>`;
             });
-            document.getElementById('results-list').innerHTML = html;
+            document.getElementById('results-list').innerHTML = listHtml;
 
             const selected = allEntries.find(x => x._uid === selectedUid);
-            const panel = document.getElementById('content-panel');
+            const panel = document.getElementById('details-panel');
             if(selected) {
-                const multiCount = checkedUids.size;
                 panel.innerHTML = `
                 <div class="action-bar">
-                    <button class="btn btn-blue" onclick="exportToWord([allEntries.find(x=>x._uid==='${selected._uid}')])">📄 Export to Word</button>
-                    ${multiCount > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">📦 Export ${multiCount} Selected</button>` : ''}
-                    <button class="btn btn-blue" style="background:#475569" onclick="navigator.clipboard.writeText(document.getElementById('sermon-text-display').innerText); alert('Copied!');">📋 Copy</button>
+                    <button class="btn btn-gray" onclick="copyContent()">📋 Copy Text</button>
+                    <button class="btn btn-blue" onclick="exportWord([allEntries.find(x=>x._uid==='${selected._uid}')])">📄 Word Export</button>
+                    ${checkedUids.size > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">📦 Export ${checkedUids.size} Selected</button>` : ''}
                 </div>
                 <div class="scroll-content">
-                    <h1 id="display-title" style="color:#f59e0b; margin-bottom:20px; font-size:2.2rem;">${selected.title}</h1>
-                    <div id="sermon-text-display">${selected.words}</div>
+                    <h1 style="color:#f59e0b; margin-bottom:20px; font-size:2.2rem;">${highlight(selected.title, query)}</h1>
+                    <div id="sermon-display">${highlight(selected.words, query)}</div>
                 </div>`;
             }
         }
 
-        function selectSermon(id) { selectedUid = id; render(); }
+        function setSelection(id) { selectedUid = id; render(); }
         function toggleCheck(id) { checkedUids.has(id) ? checkedUids.delete(id) : checkedUids.add(id); render(); }
-        function resetAll() { 
+        function resetApp() { 
             document.getElementById('main-search').value = ""; 
             activeTopic = ""; 
-            document.getElementById('topic-trigger').innerText = "All Topics"; 
+            document.getElementById('topic-trigger').innerText = "Filter by Topic"; 
             render(); 
         }
 
-        // THE BROWSER-BASED EXPORT (Preserves all formatting/tabs)
-        function exportToWord(items) {
-            if (!items.length) return;
-            const htmlHeader = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-                                <head><meta charset="utf-8"></head><body style="font-family:'Times New Roman',serif; padding:1in;">`;
-            const htmlFooter = `</body></html>`;
-            
-            let combinedContent = items.map(item => {
-                return `<h1 style="color:#2b5797; font-size:18pt; border-bottom:1px solid #ccc; padding-bottom:5px;">${item.title}</h1>
-                        <div style="white-space:pre-wrap; font-size:12pt; margin-top:20px; tab-size:4;">${item.words}</div>
-                        <br style="page-break-before:always;">`;
-            }).join('');
+        function copyContent() {
+            const text = document.getElementById('sermon-display').innerText;
+            navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"));
+        }
 
-            const fullHtml = htmlHeader + combinedContent + htmlFooter;
-            const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
-            const url = URL.createObjectURL(blob);
+        function exportWord(items) {
+            const html = `<html><head><meta charset="utf-8"></head><body style="font-family:'Times New Roman',serif; white-space:pre-wrap; padding:1in;">
+                ${items.map(i => `<h2>${i.title}</h2><div style="tab-size:4;">${i.words}</div><br style="page-break-before:always;">`).join('')}
+            </body></html>`;
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const link = document.createElement('a');
-            link.href = url;
-            link.download = items.length === 1 ? `${items[0].title}.doc` : `Sermon_Batch_Export.doc`;
+            link.href = URL.createObjectURL(blob);
+            link.download = items.length === 1 ? `${items[0].title}.doc` : "Sermon_Batch.doc";
             link.click();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
-        function bulkExport() {
-            const selectedItems = allEntries.filter(x => checkedUids.has(x._uid));
-            exportToWord(selectedItems);
-        }
+        function bulkExport() { exportWord(allEntries.filter(x => checkedUids.has(x._uid))); }
 
         // TOPIC SEARCH LOGIC
-        document.getElementById('dropdown-search-input').addEventListener('input', (e) => {
-            let q = e.target.value.toLowerCase();
+        document.getElementById('topic-search-box').addEventListener('input', (e) => {
+            let val = e.target.value.toLowerCase();
             document.querySelectorAll('.dropdown-item').forEach(item => {
-                item.style.display = item.innerText.toLowerCase().includes(q) ? 'block' : 'none';
+                item.style.display = item.innerText.toLowerCase().includes(val) ? 'block' : 'none';
             });
         });
 
         document.getElementById('main-search').addEventListener('input', render);
-        
-        window.onclick = function(e) { 
-            if (!e.target.closest('.dropdown-container')) { 
-                document.getElementById('topic-menu').classList.remove('show'); 
-            } 
-        }
+        window.onclick = (e) => { if (!e.target.closest('.dropdown-container')) document.getElementById('topic-menu').classList.remove('show'); };
 
-        initLoad();
+        loadData();
     </script>
 </body>
 </html>
