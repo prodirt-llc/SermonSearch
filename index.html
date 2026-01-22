@@ -237,12 +237,12 @@
         '\x99': '[TM]'
     };
 
-    function translateHighBit(text) {
+    function cleanText(text) {
         if (!text) return text;
-        let result = text;
-        for (let [key, val] of Object.entries(HIGH_BIT_MAP)) {
-            result = result.replaceAll(key, `<span style="color: #fbbf24; font-weight: bold;">${val}</span>`);
-        }
+        // Remove all Unicode control characters and junk
+        let result = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ');
+        // Clean up multiple spaces and normalize whitespace
+        result = result.replace(/\s+/g, ' ').trim();
         return result;
     }
 
@@ -316,7 +316,7 @@
         const panel = document.getElementById('details-panel');
         
         if(selected) {
-            const displayText = translateHighBit(selected.words || "");
+            const displayText = cleanText(selected.words || "");
             const [fileKey, fileIdx] = uid.split('-');
             const fileName = `sermons_${fileKey}.json`;
             
@@ -365,7 +365,7 @@
         const selected = allEntries.find(x => x._uid === selectedUid);
         if (!selected) return;
         const storage = document.createElement('textarea');
-        storage.value = selected.words;
+        storage.value = cleanText(selected.words);
         document.body.appendChild(storage);
         storage.select();
         document.execCommand('copy');
@@ -377,10 +377,10 @@
         const selected = allEntries.find(x => x._uid === selectedUid);
         if (!selected) return;
         const htmlHeader = `<html><head><meta charset="windows-1252"><style>
-            body { font-family: 'Courier New', monospace; font-size: 10pt; line-height: 1.1; }
-            pre { white-space: pre-wrap; mso-white-space-treatment: preserve; }
+            body { font-family: 'Courier New', monospace; font-size: 10pt; line-height: 1.5; }
+            pre { white-space: pre-wrap; word-wrap: break-word; }
         </style></head><body>`;
-        const content = `<h1>${selected.title}</h1><pre>${selected.words}</pre>`;
+        const content = `<h1>${selected.title}</h1><pre>${cleanText(selected.words)}</pre>`;
         const htmlFooter = `</body></html>`;
         const blob = new Blob([htmlHeader + content + htmlFooter], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
