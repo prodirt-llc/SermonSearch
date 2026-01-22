@@ -21,7 +21,7 @@
             color: white; border-radius: 6px; font-size: 0.9rem; width: 220px;
         }
 
-        /* TOPIC DROPDOWN FIXED */
+        /* DROPDOWN FIXES */
         .dropdown-container { position: relative; width: 250px; }
         .dropdown-trigger {
             padding: 10px; background: #0f172a; border: 1px solid #475569;
@@ -32,10 +32,9 @@
             position: absolute; top: 105%; left: 0; width: 100%;
             background: #1e293b; border: 1px solid #475569; border-radius: 6px;
             max-height: 350px; overflow-y: auto; display: none; z-index: 2000;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
         .dropdown-menu.show { display: block; }
-        .dropdown-search { width: 100%; border: none; border-bottom: 1px solid #475569; border-radius: 0; position: sticky; top: 0; z-index: 10; }
+        .dropdown-search { width: 100%; border: none; border-bottom: 1px solid #475569; position: sticky; top: 0; z-index: 10; }
         .dropdown-item { padding: 10px; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid #334155; }
         .dropdown-item:hover { background: #334155; }
 
@@ -47,23 +46,20 @@
         .loader-bar { width: 350px; height: 12px; background: #1e293b; border-radius: 20px; margin: 20px; overflow: hidden; border: 1px solid #334155; }
         #progress-fill { width: 0%; height: 100%; background: #f59e0b; transition: width 0.2s; }
 
-        /* MAIN LAYOUT */
         .main-container { display: flex; flex: 1; overflow: hidden; }
         .sidebar { width: 380px; min-width: 380px; background: #111827; border-right: 1px solid #334155; display: flex; flex-direction: column; }
-        .results-list { flex: 1; overflow-y: auto; }
+        .results-list { flex: 1; overflow-y: auto; will-change: transform; }
         
         .result-item {
             padding: 15px; border-bottom: 1px solid #1e293b; cursor: pointer;
-            display: flex; gap: 15px; align-items: flex-start; transition: 0.2s;
+            display: flex; gap: 15px; align-items: flex-start;
         }
-        .result-item:hover { background: #1e293b; }
         .result-item.active { background: #1e3a8a; border-left: 5px solid #f59e0b; }
-        .check-box { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; flex-shrink: 0; }
+        .check-box { width: 20px; height: 20px; cursor: pointer; flex-shrink: 0; }
 
-        /* CONTENT AREA */
         .details-panel { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
         .action-bar { padding: 12px 30px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; gap: 15px; }
-        .scroll-content { flex: 1; overflow-y: auto; padding: 40px; }
+        .scroll-content { flex: 1; overflow-y: auto; padding: 40px; scroll-behavior: smooth; }
         
         #sermon-display { 
             font-size: 1.6rem; line-height: 1.8; white-space: pre-wrap; 
@@ -71,7 +67,7 @@
             color: #ffffff; border: 1px solid #334155; tab-size: 4;
         }
 
-        mark { background: #f59e0b; color: black; border-radius: 2px; padding: 0 2px; }
+        mark { background: #f59e0b; color: black; border-radius: 2px; }
 
         .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; }
         .btn-blue { background: #2563eb; } .btn-gray { background: #475569; } .btn-orange { background: #d97706; } .btn-red { background: #be123c; }
@@ -80,16 +76,16 @@
 <body>
 
     <div id="loading-overlay">
-        <h2 style="letter-spacing: 2px;">SYNCING SERMON DATABASE</h2>
+        <h2>OPTIMIZING DATABASE</h2>
         <div class="loader-bar"><div id="progress-fill"></div></div>
-        <div id="load-status" style="color: #64748b;">Waiting for files...</div>
+        <div id="load-status" style="color: #64748b;">Ready...</div>
     </div>
 
     <header>
         <div class="header-flex">
-            <div><h2 style="color:#f59e0b">Sermon Browser</h2><small id="stat-count">Ready</small></div>
+            <div><h2 style="color:#f59e0b">Sermon Browser</h2><small id="stat-count">0 entries</small></div>
             <div class="search-controls">
-                <input type="text" id="main-search" placeholder="Search titles or content...">
+                <input type="text" id="main-search" placeholder="Quick Search...">
                 
                 <div class="dropdown-container">
                     <div class="dropdown-trigger" id="topic-trigger" onclick="toggleDropdown()">Filter by Topic</div>
@@ -107,8 +103,8 @@
     <div class="main-container">
         <div class="sidebar"><div class="results-list" id="results-list"></div></div>
         <div class="details-panel" id="details-panel">
-            <div style="text-align:center; padding-top: 100px; color: #475569;">
-                <h2>Select a sermon to view content</h2>
+             <div style="text-align:center; padding-top: 100px; color: #475569;">
+                <h2>Select a sermon</h2>
             </div>
         </div>
     </div>
@@ -118,6 +114,7 @@
         let selectedUid = null;
         let checkedUids = new Set();
         let activeTopic = "";
+        let searchTimeout = null;
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
         alphabet.push("OTH");
 
@@ -140,11 +137,11 @@
                 } catch(e){}
                 let pct = ((i+1)/alphabet.length)*100;
                 document.getElementById('progress-fill').style.width = pct+'%';
-                document.getElementById('load-status').innerText = `Syncing: ${allEntries.length.toLocaleString()} entries loaded`;
+                document.getElementById('load-status').innerText = `Syncing: ${allEntries.length.toLocaleString()} entries`;
             }
             allEntries.sort((a,b) => (a.title||"").localeCompare(b.title||""));
             populateTopics();
-            render();
+            renderSidebar();
             document.getElementById('loading-overlay').style.display='none';
         }
 
@@ -156,7 +153,7 @@
                 let d = document.createElement('div');
                 d.className = 'dropdown-item';
                 d.innerText = t;
-                d.onclick = () => { activeTopic = t; document.getElementById('topic-trigger').innerText = t; toggleDropdown(); render(); };
+                d.onclick = () => { activeTopic = t; document.getElementById('topic-trigger').innerText = t; toggleDropdown(); renderSidebar(); };
                 target.appendChild(d);
             });
         }
@@ -164,12 +161,12 @@
         function toggleDropdown() { document.getElementById('topic-menu').classList.toggle('show'); }
 
         function highlight(text, query) {
-            if (!query) return text;
-            const regex = new RegExp(`(${query})`, 'gi');
+            if (!query || query.length < 2) return text;
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
             return text.replace(regex, '<mark>$1</mark>');
         }
 
-        function render() {
+        function renderSidebar() {
             const query = document.getElementById('main-search').value.toLowerCase();
             const filtered = allEntries.filter(e => {
                 const matchQ = (e.title + e.words).toLowerCase().includes(query);
@@ -177,48 +174,63 @@
                 return matchQ && matchT;
             });
 
-            document.getElementById('stat-count').innerText = `${filtered.length.toLocaleString()} of ${allEntries.length.toLocaleString()}`;
+            document.getElementById('stat-count').innerText = `${filtered.length.toLocaleString()} items`;
 
             let listHtml = '';
-            filtered.slice(0, 250).forEach(e => {
-                listHtml += `<div class="result-item ${selectedUid === e._uid ? 'active' : ''}" onclick="setSelection('${e._uid}')">
+            // Only render first 150 items to keep sidebar snappy
+            filtered.slice(0, 150).forEach(e => {
+                const isActive = selectedUid === e._uid ? 'active' : '';
+                listHtml += `<div class="result-item ${isActive}" onclick="setSelection('${e._uid}')">
                     <input type="checkbox" class="check-box" ${checkedUids.has(e._uid)?'checked':''} onclick="event.stopPropagation(); toggleCheck('${e._uid}')">
                     <div style="overflow:hidden">
-                        <div style="font-weight:bold;white-space:nowrap;text-overflow:ellipsis;overflow:hidden">${highlight(e.title, query)}</div>
-                        <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">${(e.topics || []).slice(0,2).join(' | ')}</div>
+                        <div style="font-weight:bold;white-space:nowrap;text-overflow:ellipsis;overflow:hidden">${e.title}</div>
                     </div>
                 </div>`;
             });
             document.getElementById('results-list').innerHTML = listHtml;
+        }
 
-            const selected = allEntries.find(x => x._uid === selectedUid);
+        function setSelection(uid) {
+            selectedUid = uid;
+            const items = document.querySelectorAll('.result-item');
+            items.forEach(i => i.classList.remove('active'));
+            // Highlight the one clicked without a full sidebar refresh
+            const query = document.getElementById('main-search').value;
+            const selected = allEntries.find(x => x._uid === uid);
             const panel = document.getElementById('details-panel');
+            
             if(selected) {
                 panel.innerHTML = `
                 <div class="action-bar">
-                    <button class="btn btn-gray" onclick="copyContent()">📋 Copy Text</button>
-                    <button class="btn btn-blue" onclick="exportWord([allEntries.find(x=>x._uid==='${selected._uid}')])">📄 Word Export</button>
-                    ${checkedUids.size > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">📦 Export ${checkedUids.size} Selected</button>` : ''}
+                    <button class="btn btn-gray" onclick="copyContent()">📋 Copy</button>
+                    <button class="btn btn-blue" onclick="exportWord([allEntries.find(x=>x._uid==='${selected._uid}')])">📄 Word</button>
+                    ${checkedUids.size > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">📦 Export ${checkedUids.size}</button>` : ''}
                 </div>
                 <div class="scroll-content">
                     <h1 style="color:#f59e0b; margin-bottom:20px; font-size:2.2rem;">${highlight(selected.title, query)}</h1>
                     <div id="sermon-display">${highlight(selected.words, query)}</div>
                 </div>`;
             }
+            renderSidebar(); // Update sidebar active class
         }
 
-        function setSelection(id) { selectedUid = id; render(); }
-        function toggleCheck(id) { checkedUids.has(id) ? checkedUids.delete(id) : checkedUids.add(id); render(); }
+        function toggleCheck(id) { 
+            checkedUids.has(id) ? checkedUids.delete(id) : checkedUids.add(id); 
+            // Minimal update: only update action bar if visible
+            const btnContainer = document.querySelector('.action-bar');
+            if (btnContainer) setSelection(selectedUid);
+        }
+
         function resetApp() { 
             document.getElementById('main-search').value = ""; 
             activeTopic = ""; 
             document.getElementById('topic-trigger').innerText = "Filter by Topic"; 
-            render(); 
+            renderSidebar(); 
         }
 
         function copyContent() {
             const text = document.getElementById('sermon-display').innerText;
-            navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"));
+            navigator.clipboard.writeText(text).then(() => alert("Copied!"));
         }
 
         function exportWord(items) {
@@ -228,13 +240,17 @@
             const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = items.length === 1 ? `${items[0].title}.doc` : "Sermon_Batch.doc";
+            link.download = items.length === 1 ? `${items[0].title}.doc` : "Sermons.doc";
             link.click();
         }
 
         function bulkExport() { exportWord(allEntries.filter(x => checkedUids.has(x._uid))); }
 
-        // TOPIC SEARCH LOGIC
+        document.getElementById('main-search').addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(renderSidebar, 250); // Debounce typing
+        });
+
         document.getElementById('topic-search-box').addEventListener('input', (e) => {
             let val = e.target.value.toLowerCase();
             document.querySelectorAll('.dropdown-item').forEach(item => {
@@ -242,7 +258,6 @@
             });
         });
 
-        document.getElementById('main-search').addEventListener('input', render);
         window.onclick = (e) => { if (!e.target.closest('.dropdown-container')) document.getElementById('topic-menu').classList.remove('show'); };
 
         loadData();
