@@ -75,6 +75,59 @@
     font-size: 0.9rem;
     margin-top: 10px;
 }
+        /* High-contrast highlight for low vision */
+mark {
+    background: #fde047; /* Bright Yellow */
+    color: #000;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: bold;
+}
+
+/* Fix Topic Bar Width and appearance */
+.search-bar select {
+    max-width: 250px; /* Limits giant width */
+    cursor: pointer;
+}
+
+/* Multi-select styling */
+.result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.multi-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+/* Export Buttons */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.2s;
+}
+
+.btn-primary { background: #d97706; color: white; } /* Orange */
+.btn-secondary { background: #334155; color: white; } /* Slate */
+.btn-success { background: #15803d; color: white; } /* Green */
+
+.btn:hover { filter: brightness(1.1); }
     </style>
 </head>
 <body>
@@ -115,15 +168,83 @@
         <footer id="footer">Sermon Database • Ready</footer>
     </div>
 
+    To ensure everything works perfectly for the pastor, here is the complete, consolidated <script> block.
+
+I have integrated the parallel loading (27 files), the multi-select system, the high-contrast highlighting for his eyesight, and the Word export functionality. I also included a small <style> update at the top of the block to fix the giant topic bar and ensure the text is large enough for him to read easily.
+
+Replace everything from your current <script> tag to the end of the file with this:
+
+HTML
+
+    <style>
+        /* Accessibility and UI Fixes */
+        mark {
+            background: #fde047; /* Bright yellow for visibility */
+            color: #000;
+            font-weight: bold;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .content-box {
+            font-size: 1.25rem !important; /* Larger text for the Pastor */
+            line-height: 1.8 !important;
+            background: #0f172a;
+            padding: 1.5rem;
+        }
+
+        #topic-filter {
+            max-width: 200px; /* Limits the giant width */
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.98); }
+        .btn-copy { background: #475569; color: white; }
+        .btn-word { background: #2b5797; color: white; } /* Word Blue */
+        .btn-bulk { background: #d97706; color: white; }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+        }
+
+        .multi-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+    </style>
+
     <script>
-        // 1. Initialization - Variables must be exactly these names
+        // 1. GLOBAL STATE
         let allEntries = [];
-        let selectedEntryId = null; 
+        let selectedEntryId = null;
+        let multiSelectedIds = new Set();
         let loadedChunks = new Set();
         let chunksLoadedCount = 0;
-        let isStarted = false; 
+        let isStarted = false;
         const totalChunks = 27; // A-Z + OTH
 
+        // 2. LOADING ENGINE
         async function loadChunk(chunkName) {
             const name = chunkName.toUpperCase();
             if (loadedChunks.has(name)) return;
@@ -132,6 +253,7 @@
                 const response = await fetch(`./sermons_${name}.json`);
                 if (response.ok) {
                     const data = await response.json();
+                    // Assign stable IDs for selection
                     data.forEach((item, index) => {
                         item._uid = `${name}-${index}`;
                     });
@@ -139,24 +261,22 @@
                     loadedChunks.add(name);
                 }
             } catch (e) {
-                console.warn(`File missing: sermons_${name}.json`);
+                console.warn(`File missing or error: sermons_${name}.json`);
             } finally {
-                updateProgress(); 
+                updateProgress();
             }
         }
 
         function updateProgress() {
-            // Guard: Never let the count exceed the total chunks
             if (chunksLoadedCount >= totalChunks) return;
-            
             chunksLoadedCount++;
-            const percentage = Math.round((chunksLoadedCount / totalChunks) * 100);
             
+            const percentage = Math.round((chunksLoadedCount / totalChunks) * 100);
             const bar = document.getElementById('progress-bar');
             const status = document.getElementById('loading-status');
             
             if (bar) bar.style.width = percentage + '%';
-            if (status) status.textContent = `${percentage}% - Processed ${chunksLoadedCount} of ${totalChunks} alphabet files`;
+            if (status) status.textContent = `${percentage}% - Loaded ${chunksLoadedCount} of ${totalChunks} files`;
 
             if (chunksLoadedCount === totalChunks) {
                 finishLoading();
@@ -174,33 +294,69 @@
             if (overlay) overlay.style.opacity = '0';
             if (wrapper) {
                 wrapper.style.display = 'block';
-                setTimeout(() => { wrapper.style.opacity = '1'; }, 50);
+                setTimeout(() => wrapper.style.opacity = '1', 50);
             }
             setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 600);
         }
 
-        function updateTopicFilter() {
-            const topicsSet = new Set();
-            allEntries.forEach(entry => {
-                if (entry.topics) entry.topics.forEach(t => topicsSet.add(t));
-            });
-            const topics = Array.from(topicsSet).sort();
-            const filterSelect = document.getElementById('topic-filter');
-            if (!filterSelect) return;
-            
-            const current = filterSelect.value;
-            filterSelect.innerHTML = '<option value="">All Topics</option>';
-            topics.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t; opt.textContent = t;
-                filterSelect.appendChild(opt);
-            });
-            filterSelect.value = current;
+        // 3. UTILITIES
+        function highlight(text, query) {
+            if (!query || query.length < 2) return text;
+            const regex = new RegExp(`(${query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
         }
 
+        function copyToClipboard() {
+            const entry = allEntries.find(e => e._uid === selectedEntryId);
+            if (!entry) return;
+            const text = `${entry.title}\n\n${entry.words}`;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                const original = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(() => btn.innerHTML = original, 2000);
+            });
+        }
+
+        function exportToWord(entries) {
+            if (entries.length === 0) return;
+            
+            // Basic HTML wrapper that Word interprets correctly
+            let content = `
+                <html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word">
+                <head><meta charset="utf-8"></head>
+                <body style="font-family: 'Segoe UI', Arial, sans-serif;">
+            `;
+
+            entries.forEach(e => {
+                content += `<h1 style="color: #2b5797;">${e.title}</h1>`;
+                content += `<p><strong>Topics:</strong> ${(e.topics || []).join(', ')}</p>`;
+                content += `<p><strong>Scripture:</strong> ${(e.scriptures || []).join(', ')}</p>`;
+                content += `<hr style="border: 0; border-top: 1px solid #ccc;">`;
+                content += `<div style="white-space: pre-wrap; font-size: 12pt;">${(e.words || "").replace(/\n/g, '<br>')}</div>`;
+                content += `<br clear=all style='mso-break-type:section-break'>`; // Page break for bulk
+            });
+
+            content += `</body></html>`;
+
+            const blob = new Blob([content], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = entries.length === 1 ? `${entries[0].title}.doc` : `Sermon_Collection.doc`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function bulkExport() {
+            const selected = allEntries.filter(e => multiSelectedIds.has(e._uid));
+            exportToWord(selected);
+        }
+
+        // 4. CORE INTERFACE
         function render() {
-            const query = document.getElementById('search-input')?.value.toLowerCase() || "";
-            const topic = document.getElementById('topic-filter')?.value || "";
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const topic = document.getElementById('topic-filter').value;
 
             const filtered = allEntries.filter(e => {
                 const matchesSearch = !query || 
@@ -210,42 +366,60 @@
                 return matchesSearch && matchesTopic;
             });
 
+            // Results List
             const list = document.getElementById('results-list');
-            if (list) {
-                const currentScroll = list.scrollTop;
-                list.innerHTML = filtered.map(e => `
-                    <button class="result-item ${selectedEntryId === e._uid ? 'active' : ''}" 
-                            onclick="selectSermon('${e._uid}')">
-                        <div class="result-title">${e.title}</div>
+            const currentScroll = list.scrollTop;
+            list.innerHTML = filtered.map(e => `
+                <div class="result-item ${selectedEntryId === e._uid ? 'active' : ''}" onclick="selectSermon('${e._uid}')">
+                    <input type="checkbox" class="multi-checkbox" 
+                           ${multiSelectedIds.has(e._uid) ? 'checked' : ''} 
+                           onclick="toggleMultiSelect('${e._uid}', event)">
+                    <div style="flex: 1; overflow: hidden;">
+                        <div class="result-title">${highlight(e.title, query)}</div>
                         <div class="result-topics">${(e.topics || []).slice(0, 2).join(', ')}</div>
-                    </button>
-                `).join('');
-                list.scrollTop = currentScroll;
-            }
+                    </div>
+                </div>
+            `).join('');
+            list.scrollTop = currentScroll;
 
+            // Details Panel
             const details = document.getElementById('details-panel');
             const selectedEntry = allEntries.find(e => e._uid === selectedEntryId);
 
-            if (details && selectedEntry) {
+            if (selectedEntry) {
                 details.innerHTML = `
-                    <h2 class="details-title">${selectedEntry.title}</h2>
-                    <div class="section"><div class="section-title">🏷️ Topics</div>
-                        <div class="tags">${(selectedEntry.topics || []).map(t => `<span class="tag" onclick="setTopic('${t}')">${t}</span>`).join('')}</div>
+                    <div class="action-buttons">
+                        <button class="btn btn-copy" onclick="copyToClipboard()">📋 Copy Text</button>
+                        <button class="btn btn-word" onclick="exportToWord([allEntries.find(e => e._uid === '${selectedEntryId}')])">📄 Open in Word</button>
+                        ${multiSelectedIds.size > 0 ? 
+                            `<button class="btn btn-bulk" onclick="bulkExport()">📦 Export ${multiSelectedIds.size} Selected</button>` : ''}
                     </div>
-                    <div class="section"><div class="section-title">📖 Scriptures</div>
-                        <div class="tags">${(selectedEntry.scriptures || []).map(s => `<span class="scripture">${s}</span>`).join('')}</div>
+                    <h2 class="details-title">${highlight(selectedEntry.title, query)}</h2>
+                    
+                    ${selectedEntry.topics?.length ? `
+                        <div class="section">
+                            <div class="section-title">🏷️ Topics</div>
+                            <div class="tags">
+                                ${selectedEntry.topics.map(t => `<span class="tag" onclick="setTopic('${t}')">${t}</span>`).join('')}
+                            </div>
+                        </div>` : ''}
+
+                    <div class="section">
+                        <div class="section-title">📝 Content</div>
+                        <div class="content-box">${highlight(selectedEntry.words || '', query)}</div>
                     </div>
-                    <div class="section"><div class="section-title">📝 Content</div>
-                        <div class="content-box">${selectedEntry.words || ''}</div>
-                    </div>
+
                     <div class="metadata">
                         <div class="metadata-item"><span class="metadata-label">Base:</span>${selectedEntry.base || ''}</div>
+                        <div class="metadata-item"><span class="metadata-label">Source:</span>${selectedEntry.source || ''}</div>
                         <div class="metadata-item"><span class="metadata-label">ID:</span>${selectedEntry.tcaid ?? ''}</div>
-                    </div>`;
+                    </div>
+                `;
+            } else {
+                details.innerHTML = '<div class="details-empty">Select a sermon to view details</div>';
             }
 
-            const countEl = document.getElementById('entry-count');
-            if (countEl) countEl.textContent = `${filtered.length.toLocaleString()} of ${allEntries.length.toLocaleString()} entries`;
+            document.getElementById('entry-count').textContent = `${filtered.length.toLocaleString()} of ${allEntries.length.toLocaleString()} entries`;
         }
 
         function selectSermon(uid) {
@@ -253,30 +427,50 @@
             render();
         }
 
-        function setTopic(t) {
-            document.getElementById('topic-filter').value = t;
+        function toggleMultiSelect(uid, event) {
+            event.stopPropagation();
+            if (multiSelectedIds.has(uid)) multiSelectedIds.delete(uid);
+            else multiSelectedIds.add(uid);
             render();
         }
 
+        function setTopic(name) {
+            document.getElementById('topic-filter').value = name;
+            render();
+        }
+
+        function updateTopicFilter() {
+            const topicsSet = new Set();
+            allEntries.forEach(entry => {
+                if (entry.topics) entry.topics.forEach(t => topicsSet.add(t));
+            });
+            const filterSelect = document.getElementById('topic-filter');
+            const current = filterSelect.value;
+            filterSelect.innerHTML = '<option value="">All Topics</option>';
+            Array.from(topicsSet).sort().forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t; opt.textContent = t;
+                filterSelect.appendChild(opt);
+            });
+            filterSelect.value = current;
+        }
+
         async function loadEverything() {
-            // Guard: prevent the function from running twice
             if (isStarted) return;
             isStarted = true;
-
             const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
             alphabet.push("OTH");
             await Promise.all(alphabet.map(letter => loadChunk(letter)));
         }
 
-        // Event listeners
+        // Init
         document.getElementById('search-input').addEventListener('input', render);
         document.getElementById('topic-filter').addEventListener('change', render);
-
-        // Run the loader
         loadEverything();
     </script>
 </body>
 </html>
+
 
 
 
