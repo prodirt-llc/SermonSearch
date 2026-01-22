@@ -61,16 +61,73 @@
         .action-bar { padding: 12px 30px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; gap: 15px; }
         .scroll-content { flex: 1; overflow-y: auto; padding: 40px; scroll-behavior: smooth; }
         
+        /* RED DASHED SECTION BORDERS */
+        .section-box {
+            border: 2px dashed #dc2626;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+            background: rgba(220, 38, 38, 0.05);
+        }
+
+        .section-title {
+            color: #f59e0b;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         #sermon-display { 
             font-size: 1.6rem; line-height: 1.8; white-space: pre-wrap; 
             background: #1e293b; padding: 40px; border-radius: 12px; 
             color: #ffffff; border: 1px solid #334155; tab-size: 4;
+            font-family: 'Courier New', monospace;
+        }
+
+        .topics-box, .scriptures-box, .content-box {
+            display: flex; flex-wrap: wrap; gap: 8px;
+        }
+
+        .tag {
+            background: #1e3a8a;
+            color: #93c5fd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .scripture-ref {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
         }
 
         mark { background: #f59e0b; color: black; border-radius: 2px; }
 
         .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; }
         .btn-blue { background: #2563eb; } .btn-gray { background: #475569; } .btn-orange { background: #d97706; } .btn-red { background: #be123c; }
+
+        /* EDIT MODE */
+        .edit-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 5000;
+            align-items: center; justify-content: center;
+        }
+        .edit-modal.show { display: flex; }
+        .edit-form {
+            background: #1e293b; padding: 30px; border-radius: 12px; width: 90%; max-width: 700px;
+            max-height: 90vh; overflow-y: auto; border: 1px solid #475569;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #cbd5e1; font-weight: bold; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569;
+            color: white; border-radius: 6px; font-family: inherit;
+        }
+        .form-group textarea { min-height: 200px; resize: vertical; }
     </style>
 </head>
 <body>
@@ -109,6 +166,34 @@
         </div>
     </div>
 
+    <!-- EDIT MODAL -->
+    <div id="edit-modal" class="edit-modal">
+        <div class="edit-form">
+            <h2 style="margin-bottom: 20px; color: #f59e0b;">Edit Sermon</h2>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="edit-title">
+            </div>
+            <div class="form-group">
+                <label>Content</label>
+                <textarea id="edit-content"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Topics (comma-separated)</label>
+                <input type="text" id="edit-topics">
+            </div>
+            <div class="form-group">
+                <label>Scriptures (comma-separated)</label>
+                <input type="text" id="edit-scriptures">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-blue" onclick="saveEdit()">Save</button>
+                <button class="btn btn-gray" onclick="closeEdit()">Cancel</button>
+                <button class="btn btn-red" onclick="deleteSermon()">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     let allEntries = [];
     let selectedUid = null;
@@ -118,6 +203,24 @@
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     alphabet.push("OTH");
 
+    // High-bit character mapping (legacy encoding)
+    const HIGH_BIT_MAP = {
+        '\x81': '«', '\x82': '»', '\x83': '™', '\x84': '€', 
+        '\x85': '…', '\x86': '†', '\x87': '‡', '\x88': 'ˆ',
+        '\x8c': 'Œ', '\x91': ''', '\x92': ''', '\x93': '"', 
+        '\x94': '"', '\x95': '•', '\x96': '–', '\x97': '—',
+        '\x99': '™', '\xc2': '', // Common ones
+    };
+
+    function translateHighBit(text) {
+        if (!text) return text;
+        let result = text;
+        for (let [key, val] of Object.entries(HIGH_BIT_MAP)) {
+            result = result.replaceAll(key, `<span style="color: #fbbf24; font-weight: bold;">${val}</span>`);
+        }
+        return result;
+    }
+
     async function loadData() {
         for(let i=0; i<alphabet.length; i++) {
             try {
@@ -126,7 +229,7 @@
                     let data = await r.json();
                     data.forEach((item, idx) => {
                         item._uid = `${alphabet[i]}-${idx}`;
-                        // We keep item.words RAW here to preserve high-bit characters for Word/Notepad++
+                        item._isDirty = false;
                         allEntries.push(item);
                     });
                 }
@@ -182,29 +285,46 @@
     }
 
     function setSelection(uid) {
-    selectedUid = uid;
-    const query = document.getElementById('main-search').value;
-    const selected = allEntries.find(x => x._uid === uid);
-    const panel = document.getElementById('details-panel');
-    
-    if(selected) {
-        // We use the raw words here. If you want the colors back later, 
-        // we can add the translator back once the basic clicking works.
-        const displayText = selected.words || "";
+        selectedUid = uid;
+        const query = document.getElementById('main-search').value;
+        const selected = allEntries.find(x => x._uid === uid);
+        const panel = document.getElementById('details-panel');
         
-        panel.innerHTML = `
-        <div class="action-bar">
-            <button class="btn btn-gray" onclick="copyContent()">📋 Copy</button>
-            <button class="btn btn-blue" onclick="exportWord()">📄 Word</button>
-            ${checkedUids.size > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">📦 Export ${checkedUids.size}</button>` : ''}
-        </div>
-        <div class="scroll-content">
-            <h1 id="export-title" style="color:#f59e0b; margin-bottom:20px;">${highlight(selected.title, query)}</h1>
-            <div id="sermon-display" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 11pt; color: #e5e7eb;">${highlight(displayText, query)}</div>
-        </div>`;
+        if(selected) {
+            const displayText = translateHighBit(selected.words || "");
+            
+            panel.innerHTML = `
+            <div class="action-bar">
+                <button class="btn btn-gray" onclick="copyContent()">📋 Copy</button>
+                <button class="btn btn-blue" onclick="exportWord()">📄 Word</button>
+                <button class="btn btn-orange" onclick="editSermon()">✏️ Edit</button>
+                ${checkedUids.size > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">📦 Export ${checkedUids.size}</button>` : ''}
+            </div>
+            <div class="scroll-content">
+                <h1 id="export-title" style="color:#f59e0b; margin-bottom:20px;">${highlight(selected.title, query)}</h1>
+                
+                <div class="section-box">
+                    <div class="section-title">📌 Topics</div>
+                    <div class="topics-box">
+                        ${(selected.topics || []).map(t => `<span class="tag">${t}</span>`).join('')}
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-title">📖 Scripture References</div>
+                    <div class="scriptures-box">
+                        ${(selected.scriptures || []).map(s => `<span class="scripture-ref">${s}</span>`).join('')}
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-title">📝 Content</div>
+                    <div id="sermon-display" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 11pt; color: #e5e7eb;">${highlight(displayText, query)}</div>
+                </div>
+            </div>`;
+        }
+        renderSidebar(); 
     }
-    renderSidebar(); 
-}
 
     function toggleCheck(id) { 
         checkedUids.has(id) ? checkedUids.delete(id) : checkedUids.add(id); 
@@ -212,47 +332,88 @@
     }
 
     function copyContent() {
-    const selected = allEntries.find(x => x._uid === selectedUid);
-    if (!selected) return;
-    
-    // This copies the raw data (with the hidden formatting characters) 
-    // so it looks right when pasted into Notepad++
-    const storage = document.createElement('textarea');
-    storage.value = selected.words;
-    document.body.appendChild(storage);
-    storage.select();
-    document.execCommand('copy');
-    document.body.removeChild(storage);
-    alert("Copied to clipboard!");
-}
+        const selected = allEntries.find(x => x._uid === selectedUid);
+        if (!selected) return;
+        const storage = document.createElement('textarea');
+        storage.value = selected.words;
+        document.body.appendChild(storage);
+        storage.select();
+        document.execCommand('copy');
+        document.body.removeChild(storage);
+        alert("Copied to clipboard!");
+    }
 
     function exportWord() {
-    const selected = allEntries.find(x => x._uid === selectedUid);
-    if (!selected) return;
+        const selected = allEntries.find(x => x._uid === selectedUid);
+        if (!selected) return;
+        const htmlHeader = `<html><head><meta charset="windows-1252"><style>
+            body { font-family: 'Courier New', monospace; font-size: 10pt; line-height: 1.1; }
+            pre { white-space: pre-wrap; mso-white-space-treatment: preserve; }
+        </style></head><body>`;
+        const content = `<h1>${selected.title}</h1><pre>${selected.words}</pre>`;
+        const htmlFooter = `</body></html>`;
+        const blob = new Blob([htmlHeader + content + htmlFooter], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${selected.title.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
 
-    // We use the raw text and tell Word to use the Windows-1252 encoding 
-    // which helps it see the high-bit characters from the 80s database.
-    const htmlHeader = `<html><head><meta charset="windows-1252"><style>
-        body { font-family: 'Courier New', monospace; font-size: 10pt; line-height: 1.1; }
-        pre { white-space: pre-wrap; mso-white-space-treatment: preserve; }
-    </style></head><body>`;
-    
-    const content = `<h1>${selected.title}</h1><pre>${selected.words}</pre>`;
-    const htmlFooter = `</body></html>`;
+    function editSermon() {
+        const selected = allEntries.find(x => x._uid === selectedUid);
+        if (!selected) return;
+        document.getElementById('edit-title').value = selected.title || '';
+        document.getElementById('edit-content').value = selected.words || '';
+        document.getElementById('edit-topics').value = (selected.topics || []).join(', ');
+        document.getElementById('edit-scriptures').value = (selected.scriptures || []).join(', ');
+        document.getElementById('edit-modal').classList.add('show');
+    }
 
-    const blob = new Blob([htmlHeader + content + htmlFooter], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${selected.title.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
+    function closeEdit() {
+        document.getElementById('edit-modal').classList.remove('show');
+    }
+
+    function saveEdit() {
+        const selected = allEntries.find(x => x._uid === selectedUid);
+        if (!selected) return;
+        selected.title = document.getElementById('edit-title').value;
+        selected.words = document.getElementById('edit-content').value;
+        selected.topics = document.getElementById('edit-topics').value.split(',').map(t => t.trim()).filter(t => t);
+        selected.scriptures = document.getElementById('edit-scriptures').value.split(',').map(t => t.trim()).filter(t => t);
+        selected._isDirty = true;
+        alert('✓ Changes saved locally! (Sync to cloud coming soon)');
+        closeEdit();
+        setSelection(selectedUid);
+    }
+
+    function deleteSermon() {
+        if (confirm('Delete this sermon? This cannot be undone.')) {
+            const idx = allEntries.findIndex(x => x._uid === selectedUid);
+            if (idx >= 0) {
+                allEntries.splice(idx, 1);
+                selectedUid = null;
+                document.getElementById('details-panel').innerHTML = '<div style="text-align:center; padding-top: 100px; color: #475569;"><h2>Select a sermon</h2></div>';
+                renderSidebar();
+                closeEdit();
+            }
+        }
+    }
 
     function bulkExport() {
-        const selectedItems = allEntries.filter(x => checkedUids.has(x._uid));
-        alert("Preparing " + selectedItems.length + " sermons for export...");
-        // Reuse the exportWord logic in a loop or single file here
+        alert("Preparing " + checkedUids.size + " sermons for export...");
+    }
+
+    function resetApp() {
+        searchTimeout = null;
+        activeTopic = '';
+        selectedUid = null;
+        checkedUids.clear();
+        document.getElementById('main-search').value = '';
+        document.getElementById('topic-trigger').innerText = 'Filter by Topic';
+        document.getElementById('details-panel').innerHTML = '<div style="text-align:center; padding-top: 100px; color: #475569;"><h2>Select a sermon</h2></div>';
+        renderSidebar();
     }
 
     document.getElementById('main-search').addEventListener('input', () => {
@@ -269,16 +430,6 @@
 
     window.onclick = (e) => { if (!e.target.closest('.dropdown-container')) document.getElementById('topic-menu').classList.remove('show'); };
     loadData();
-</script>
+    </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
