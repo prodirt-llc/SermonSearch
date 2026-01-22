@@ -331,21 +331,21 @@
                 <h1 id="export-title" style="color:#f59e0b; margin-bottom:20px;">${highlight(selected.title, query)}</h1>
                 
                 <div style="margin: 20px 0;">
-                    <div class="section-title">ðŸ"Œ Topics</div>
+                    <div class="section-title">📋 Topics</div>
                     <div class="topics-box">
                         ${(selected.topics || []).map(t => `<span class="tag">${t}</span>`).join('')}
                     </div>
                 </div>
 
                 <div style="margin: 20px 0;">
-                    <div class="section-title">ðŸ"– Scripture References</div>
+                    <div class="section-title">📖 Scripture References</div>
                     <div class="scriptures-box">
                         ${(selected.scriptures || []).map(s => `<span class="scripture-ref">${s}</span>`).join('')}
                     </div>
                 </div>
 
                 <div style="margin: 20px 0;">
-                    <div class="section-title">ðŸ" Content</div>
+                    <div class="section-title">📄 Content</div>
                     <div id="sermon-display" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 11pt; color: #e5e7eb;">${highlight(displayText, query)}</div>
                 </div>
             </div>
@@ -370,23 +370,66 @@
         storage.select();
         document.execCommand('copy');
         document.body.removeChild(storage);
-        alert("Copied to clipboard!");
+        
+        // Show green notification
+        const btn = event.target;
+        const oldText = btn.innerText;
+        btn.innerText = '✓ Copied!';
+        btn.style.background = '#16a34a';
+        setTimeout(() => {
+            btn.innerText = oldText;
+            btn.style.background = '';
+        }, 2000);
     }
 
     function exportWord() {
         const selected = allEntries.find(x => x._uid === selectedUid);
         if (!selected) return;
-        const htmlHeader = `<html><head><meta charset="windows-1252"><style>
-            body { font-family: 'Courier New', monospace; font-size: 10pt; line-height: 1.5; }
-            pre { white-space: pre-wrap; word-wrap: break-word; }
-        </style></head><body>`;
-        const content = `<h1>${selected.title}</h1><pre>${cleanText(selected.words)}</pre>`;
+        
+        const cleanedContent = cleanText(selected.words);
+        const cleanedTitle = selected.title;
+        const topics = (selected.topics || []).join(', ');
+        const scriptures = (selected.scriptures || []).join(', ');
+        
+        const htmlHeader = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.5; margin: 1in; }
+h1 { font-size: 16pt; font-weight: bold; margin-top: 0; }
+.section { margin: 12pt 0; }
+.label { font-weight: bold; color: #1e40af; }
+.content { white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; }
+</style>
+</head>
+<body>`;
+        
+        const content = `
+<h1>${cleanedTitle}</h1>
+
+<div class="section">
+<div class="label">Topics:</div>
+<div>${topics || '(none)'}</div>
+</div>
+
+<div class="section">
+<div class="label">Scripture References:</div>
+<div>${scriptures || '(none)'}</div>
+</div>
+
+<div class="section">
+<div class="label">Content:</div>
+<div class="content">${cleanedContent}</div>
+</div>
+`;
+        
         const htmlFooter = `</body></html>`;
-        const blob = new Blob([htmlHeader + content + htmlFooter], { type: 'application/msword' });
+        const blob = new Blob([htmlHeader + content + htmlFooter], { type: 'application/vnd.ms-word.document' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${selected.title.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
+        link.download = `${cleanedTitle.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
