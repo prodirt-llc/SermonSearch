@@ -285,7 +285,7 @@ function setSelection(uid) {
     
     if(selected) {
         // We stop stripping "bad chars" here and let the translator handle them
-        const coloredWords = ansiToHtml(selected.words);
+        document.getElementById('sermon-display').innerHTML = highlight(coloredWords, query);
         
         panel.innerHTML = `
         <div class="action-bar">
@@ -298,6 +298,36 @@ function setSelection(uid) {
         </div>`;
     }
     renderSidebar();
+}
+
+function decodeHighBitFormatting(text) {
+    if (!text) return "";
+    let result = "";
+    let inColor = false;
+
+    for (let i = 0; i < text.length; i++) {
+        let code = text.charCodeAt(i);
+        
+        // If the character is a "High-Bit" character (ASCII > 127)
+        if (code > 127) {
+            let originalChar = String.fromCharCode(code - 128);
+            if (!inColor) {
+                // Change to orange/blue like your Notepad++ screenshot
+                result += `<span style="color: #38bdf8; font-weight: bold;">${originalChar}`;
+                inColor = true;
+            } else {
+                result += originalChar;
+            }
+        } else {
+            if (inColor) {
+                result += "</span>";
+                inColor = false;
+            }
+            result += text[i];
+        }
+    }
+    if (inColor) result += "</span>";
+    return result;
 }
     document.getElementById('main-search').addEventListener('input', () => {
         clearTimeout(searchTimeout);
@@ -316,6 +346,7 @@ function setSelection(uid) {
 </script>
 </body>
 </html>
+
 
 
 
