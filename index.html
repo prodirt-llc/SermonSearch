@@ -5,243 +5,217 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sermon Database Viewer</title>
     <style>
-        /* 1. CORE LAYOUT */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: #0f172a; color: #f1f5f9;
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* 2. FIXED HEADER (Prevents Blow-out) */
-        header { background: #1e293b; padding: 15px 20px; border-bottom: 2px solid #334155; z-index: 1000; }
-        .header-flex { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-        .search-controls { display: flex; gap: 12px; align-items: center; flex-grow: 1; justify-content: flex-end; }
-        
-        .input-box {
-            display: flex; flex-direction: column; gap: 4px;
-        }
-        .input-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        /* HEADER & SEARCH */
+        header { background: #1e293b; padding: 12px 20px; border-bottom: 2px solid #334155; z-index: 100; }
+        .header-flex { display: flex; align-items: center; justify-content: space-between; }
+        .search-area { display: flex; gap: 10px; align-items: center; position: relative; }
         
         input {
             padding: 10px; background: #0f172a; border: 1px solid #475569;
-            color: white; border-radius: 6px; font-size: 0.95rem; width: 280px;
+            color: white; border-radius: 6px; font-size: 0.9rem; width: 250px;
         }
 
-        /* 3. MAIN INTERFACE */
-        .main-container { display: flex; flex: 1; overflow: hidden; }
-        
-        /* Sidebar List */
-        .sidebar {
-            width: 380px; min-width: 380px; background: #111827; 
-            border-right: 1px solid #334155; display: flex; flex-direction: column;
+        /* CUSTOM SEARCHABLE DROPDOWN (Fixes Blow-out) */
+        .dropdown-container { position: relative; width: 280px; }
+        .dropdown-trigger {
+            padding: 10px; background: #0f172a; border: 1px solid #475569;
+            border-radius: 6px; cursor: pointer; color: #94a3b8;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .results-list { flex: 1; overflow-y: auto; }
-        .result-item {
-            padding: 15px; border-bottom: 1px solid #1e293b; cursor: pointer;
-            display: flex; align-items: flex-start; gap: 12px; transition: 0.2s;
+        .dropdown-menu {
+            position: absolute; top: 105%; left: 0; width: 100%;
+            background: #1e293b; border: 1px solid #475569; border-radius: 6px;
+            max-height: 400px; overflow-y: auto; display: none; z-index: 1000;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.5);
         }
-        .result-item:hover { background: #1e293b; }
-        .result-item.active { background: #1e3a8a; border-left: 6px solid #f59e0b; }
-        
-        .checkbox-container { padding-top: 3px; }
-        .check-box { width: 20px; height: 20px; cursor: pointer; }
-
-        /* Reading Panel */
-        .details-panel { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
-        .action-bar {
-            background: #1e293b; padding: 12px 30px; border-bottom: 1px solid #334155;
-            display: flex; gap: 15px;
+        .dropdown-menu.show { display: block; }
+        .dropdown-search { width: 100%; border: none; border-bottom: 1px solid #475569; border-radius: 0; sticky: top; }
+        .dropdown-item {
+            padding: 10px; cursor: pointer; font-size: 0.85rem;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
+        .dropdown-item:hover { background: #334155; }
 
-        .scroll-content { flex: 1; overflow-y: auto; padding: 40px; }
-
-        /* 4. CONTENT DISPLAY (Preserves Formatting) */
-        .content-box {
-            font-size: 1.6rem; line-height: 1.8; background: #1e293b;
-            padding: 35px; border-radius: 12px; 
-            white-space: pre-wrap; /* Keeps line breaks */
-            tab-size: 4;           /* Keeps tabs */
-            color: #ffffff; border: 1px solid #334155;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .btn {
-            padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold;
-            cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem;
-        }
-        .btn-blue { background: #2563eb; color: white; }
-        .btn-gray { background: #475569; color: white; }
-        .btn-red { background: #be123c; color: white; }
-        .btn-orange { background: #d97706; color: white; }
-
-        /* 5. LOADING SCREEN */
+        /* LOADING BAR (Restored from image_2260f9.png) */
         #loading-overlay {
             position: fixed; inset: 0; background: #0f172a;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
         }
-        .progress-container { width: 400px; height: 10px; background: #1e293b; border-radius: 5px; margin: 20px 0; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: #f59e0b; transition: 0.3s; }
+        .loader-bar { width: 300px; height: 8px; background: #1e293b; border-radius: 10px; margin: 15px; overflow: hidden; }
+        #progress-fill { width: 0%; height: 100%; background: #f59e0b; transition: width 0.2s; }
+
+        /* SIDEBAR & CHECKBOXES */
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 350px; min-width: 350px; background: #111827; border-right: 1px solid #334155; display: flex; flex-direction: column; }
+        .results-list { flex: 1; overflow-y: auto; }
+        .result-item {
+            padding: 12px; border-bottom: 1px solid #1e293b; cursor: pointer;
+            display: flex; gap: 12px; align-items: flex-start;
+        }
+        .result-item:hover { background: #1e293b; }
+        .result-item.active { background: #1e3a8a; }
+        .check-box { width: 18px; height: 18px; margin-top: 3px; cursor: pointer; }
+
+        /* CONTENT PANEL */
+        .details-panel { flex: 1; display: flex; flex-direction: column; }
+        .action-bar { padding: 10px 20px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; gap: 10px; }
+        .scroll-content { flex: 1; overflow-y: auto; padding: 30px; }
+        #sermon-text { 
+            font-size: 1.5rem; line-height: 1.7; white-space: pre-wrap; 
+            background: #1e293b; padding: 25px; border-radius: 8px; 
+        }
+
+        .btn { padding: 8px 15px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; color: white; }
+        .btn-blue { background: #2563eb; } .btn-red { background: #be123c; } .btn-orange { background: #f59e0b; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
-        <h2 style="letter-spacing: 2px;">PREPARING SERMON DATABASE</h2>
-        <div class="progress-container"><div id="progress-bar"></div></div>
-        <div id="loading-status" style="color: #64748b;">Ready to process...</div>
+        <h3>LOADING SERMONS</h3>
+        <div class="loader-bar"><div id="progress-fill"></div></div>
+        <div id="load-status">Initializing...</div>
     </div>
 
     <header>
         <div class="header-flex">
-            <div>
-                <h1 style="color: #f59e0b; font-size: 1.4rem;">Sermon Browser</h1>
-                <span id="stat-count" style="font-size: 0.8rem; color: #94a3b8;">0 entries loaded</span>
-            </div>
-            <div class="search-controls">
-                <div class="input-box">
-                    <span class="input-label">Search Content</span>
-                    <input type="text" id="search-input" placeholder="Keyword, Title, or Verse...">
+            <div><h2 style="color:#f59e0b">Sermon Browser</h2><small id="stat-count">0 entries</small></div>
+            <div class="search-area">
+                <input type="text" id="main-search" placeholder="Search keywords...">
+                
+                <div class="dropdown-container">
+                    <div class="dropdown-trigger" id="topic-trigger" onclick="toggleDropdown()">All Topics</div>
+                    <div class="dropdown-menu" id="topic-menu">
+                        <input type="text" id="dropdown-search-input" class="dropdown-search" placeholder="Filter topics..." onclick="event.stopPropagation()">
+                        <div id="topic-items-list"></div>
+                    </div>
                 </div>
-                <div class="input-box">
-                    <span class="input-label">Filter by Topic</span>
-                    <input type="text" id="topic-input" placeholder="Type a topic (e.g. Love)...">
-                </div>
-                <button class="btn btn-red" onclick="resetFilters()" style="margin-top: 15px;">Reset All</button>
+
+                <button class="btn btn-red" onclick="resetAll()">Reset View</button>
             </div>
         </div>
     </header>
 
     <div class="main-container">
-        <div class="sidebar">
-            <div class="results-list" id="results-list"></div>
-        </div>
-        <div class="details-panel" id="details-panel">
-            <div style="text-align:center; padding-top: 150px; color: #475569;">
-                <h2>Welcome, Pastor.</h2>
-                <p>Select a sermon to begin reading.</p>
-            </div>
-        </div>
+        <div class="sidebar"><div class="results-list" id="results-list"></div></div>
+        <div class="details-panel" id="content-panel"></div>
     </div>
 
     <script>
         let allEntries = [];
-        let selectedUid = null;
-        let checkedUids = new Set();
+        let selectedId = null;
+        let checkedIds = new Set();
+        let activeTopic = "";
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
         alphabet.push("OTH");
 
-        // CLEANER: Specifically removes those box hieroglyphics but keeps formatting
-        function clean(str) {
-            if (!str) return "";
-            return str.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFD]/g, "").trim();
-        }
+        // CLEANER: Specifically removes those box hieroglyphics
+        function scrub(t) { return t ? t.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFD]/g, "").trim() : ""; }
 
-        async function loadSermons() {
-            for (let i = 0; i < alphabet.length; i++) {
-                let letter = alphabet[i];
+        async function init() {
+            for(let i=0; i<alphabet.length; i++) {
                 try {
-                    let res = await fetch(`./sermons_${letter}.json`);
-                    if (res.ok) {
-                        let data = await res.json();
+                    let r = await fetch(`./sermons_${alphabet[i]}.json`);
+                    if(r.ok) {
+                        let data = await r.json();
                         data.forEach((item, idx) => {
-                            item._uid = `${letter}-${idx}`;
-                            item.words = clean(item.words); // Scrub boxes at the source
+                            item._uid = `${alphabet[i]}-${idx}`;
+                            item.words = scrub(item.words);
                             allEntries.push(item);
                         });
                     }
-                } catch (e) {}
-                
-                let pct = Math.round(((i + 1) / alphabet.length) * 100);
-                document.getElementById('progress-bar').style.width = pct + '%';
-                document.getElementById('loading-status').innerText = `Processed ${allEntries.length.toLocaleString()} sermons...`;
+                } catch(e){}
+                let pct = ((i+1)/alphabet.length)*100;
+                document.getElementById('progress-fill').style.width = pct+'%';
+                document.getElementById('load-status').innerText = `Processed ${allEntries.length.toLocaleString()} sermons`;
             }
-            allEntries.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-            document.getElementById('loading-overlay').style.display = 'none';
+            allEntries.sort((a,b) => (a.title||"").localeCompare(b.title||""));
+            buildTopicList();
             render();
+            document.getElementById('loading-overlay').style.display='none';
         }
 
-        function resetFilters() {
-            document.getElementById('search-input').value = "";
-            document.getElementById('topic-input').value = "";
-            render();
+        function buildTopicList() {
+            let topics = new Set();
+            allEntries.forEach(e => (e.topics || []).forEach(t => topics.add(t)));
+            let list = document.getElementById('topic-items-list');
+            Array.from(topics).sort().forEach(t => {
+                let div = document.createElement('div');
+                div.className = 'dropdown-item';
+                div.innerText = t;
+                div.onclick = () => { activeTopic = t; document.getElementById('topic-trigger').innerText = t; toggleDropdown(); render(); };
+                list.appendChild(div);
+            });
         }
+
+        function toggleDropdown() { document.getElementById('topic-menu').classList.toggle('show'); }
+
+        function render() {
+            const query = document.getElementById('main-search').value.toLowerCase();
+            const filtered = allEntries.filter(e => {
+                const matchQ = (e.title + e.words).toLowerCase().includes(query);
+                const matchT = !activeTopic || (e.topics || []).includes(activeTopic);
+                return matchQ && matchT;
+            });
+
+            document.getElementById('stat-count').innerText = `${filtered.length.toLocaleString()} results`;
+            let html = '';
+            filtered.slice(0, 200).forEach(e => {
+                html += `<div class="result-item ${selectedId === e._uid ? 'active' : ''}" onclick="selectSermon('${e._uid}')">
+                    <input type="checkbox" class="check-box" ${checkedIds.has(e._uid)?'checked':''} onclick="event.stopPropagation(); toggleCheck('${e._uid}')">
+                    <div style="overflow:hidden"><div style="font-weight:bold;white-space:nowrap;text-overflow:ellipsis;overflow:hidden">${e.title}</div></div>
+                </div>`;
+            });
+            document.getElementById('results-list').innerHTML = html;
+
+            const cur = allEntries.find(x => x._uid === selectedId);
+            const panel = document.getElementById('content-panel');
+            if(cur) {
+                panel.innerHTML = `
+                <div class="action-bar">
+                    <button class="btn btn-blue" onclick="exportWord([allEntries.find(x=>x._uid==='${cur._uid}')])">Export Word</button>
+                    ${checkedIds.size > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">Export ${checkedIds.size} Selected</button>` : ''}
+                </div>
+                <div class="scroll-content">
+                    <h1 style="color:#f59e0b; margin-bottom:20px;">${cur.title}</h1>
+                    <div id="sermon-text">${cur.words}</div>
+                </div>`;
+            }
+        }
+
+        function selectSermon(id) { selectedId = id; render(); }
+        function toggleCheck(id) { checkedIds.has(id) ? checkedIds.delete(id) : checkedIds.add(id); render(); }
+        function resetAll() { document.getElementById('main-search').value = ""; activeTopic = ""; document.getElementById('topic-trigger').innerText = "All Topics"; render(); }
 
         function exportWord(items) {
-            if (!items.length) return;
-            const html = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-                <head><meta charset="utf-8"></head>
-                <body style="font-family: 'Times New Roman', serif; padding: 1in;">
-                    ${items.map(e => `
-                        <h1 style="color: #2b5797; font-size: 20pt; border-bottom: 1px solid #ccc;">${e.title}</h1>
-                        <div style="white-space: pre-wrap; font-size: 12pt; margin-top: 20px;">${e.words}</div>
-                        <br style="page-break-before: always;">
-                    `).join('')}
-                </body>
-                </html>`;
-
+            const html = `<html><head><meta charset="utf-8"></head><body style="font-family:serif;white-space:pre-wrap;">${items.map(i => `<h1>${i.title}</h1><div>${i.words}</div><br style="page-break-before:always;">`).join('')}</body></html>`;
             const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = items.length === 1 ? `${items[0].title}.doc` : `Selected_Sermons.doc`;
+            link.download = "Sermon_Export.doc";
             link.click();
         }
 
-        function render() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const topic = document.getElementById('topic-input').value.toLowerCase();
+        function bulkExport() { exportWord(allEntries.filter(x => checkedIds.has(x._uid))); }
 
-            const filtered = allEntries.filter(e => {
-                const matchContent = (e.title + e.words).toLowerCase().includes(query);
-                const matchTopic = !topic || (e.topics || []).some(t => t.toLowerCase().includes(topic));
-                return matchContent && matchTopic;
+        document.getElementById('main-search').addEventListener('input', render);
+        document.getElementById('dropdown-search-input').addEventListener('input', (e) => {
+            let q = e.target.value.toLowerCase();
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.style.display = item.innerText.toLowerCase().includes(q) ? 'block' : 'none';
             });
+        });
 
-            document.getElementById('stat-count').innerText = `${filtered.length.toLocaleString()} of ${allEntries.length.toLocaleString()} entries`;
+        window.onclick = function(e) { if (!e.target.matches('#topic-trigger')) { document.getElementById('topic-menu').classList.remove('show'); } }
 
-            let listHtml = '';
-            filtered.slice(0, 300).forEach(e => { // Viewport performance cap
-                const active = selectedUid === e._uid ? 'active' : '';
-                const checked = checkedUids.has(e._uid) ? 'checked' : '';
-                listHtml += `
-                    <div class="result-item ${active}" onclick="selectSermon('${e._uid}')">
-                        <div class="checkbox-container" onclick="event.stopPropagation()">
-                            <input type="checkbox" class="check-box" ${checked} onchange="toggleCheck('${e._uid}')">
-                        </div>
-                        <div style="overflow:hidden;">
-                            <div style="font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${e.title}</div>
-                            <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">${(e.topics || []).slice(0,3).join(', ')}</div>
-                        </div>
-                    </div>`;
-            });
-            document.getElementById('results-list').innerHTML = listHtml;
-
-            const selected = allEntries.find(x => x._uid === selectedUid);
-            const panel = document.getElementById('details-panel');
-            if (selected) {
-                const multiBtn = checkedUids.size > 0 ? `<button class="btn btn-orange" onclick="exportWord(allEntries.filter(x => checkedUids.has(x._uid)))">📦 Export ${checkedUids.size} Selected</button>` : '';
-                panel.innerHTML = `
-                    <div class="action-bar">
-                        <button class="btn btn-gray" onclick="navigator.clipboard.writeText(document.getElementById('scrubbed-content').innerText); alert('Copied to clipboard!')">📋 Copy Text</button>
-                        <button class="btn btn-blue" onclick="exportWord([allEntries.find(x => x._uid === '${selected._uid}')])">📄 Word Export</button>
-                        ${multiBtn}
-                    </div>
-                    <div class="scroll-content">
-                        <h1 style="font-size: 2.2rem; color: #f59e0b; margin-bottom: 20px;">${selected.title}</h1>
-                        <div id="scrubbed-content" class="content-box">${selected.words}</div>
-                    </div>`;
-            }
-        }
-
-        function selectSermon(id) { selectedUid = id; render(); }
-        function toggleCheck(id) { if (checkedUids.has(id)) checkedUids.delete(id); else checkedUids.add(id); render(); }
-        
-        document.getElementById('search-input').addEventListener('input', render);
-        document.getElementById('topic-input').addEventListener('input', render);
-        
-        loadSermons();
+        init();
     </script>
 </body>
 </html>
