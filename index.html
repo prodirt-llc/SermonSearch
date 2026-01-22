@@ -470,6 +470,13 @@
             render();
         }
 
+        async function loadAllSermons() {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    // This runs all 26 fetches at once
+    await Promise.all(alphabet.map(letter => loadData(letter)));
+    console.log("All sermon chunks loaded.");
+}
+
         document.getElementById('search-input').addEventListener('input', (e) => {
             const char = e.target.value.charAt(0).toUpperCase();
             if (char && /^[A-Z]$/.test(char)) {
@@ -481,9 +488,13 @@
         document.getElementById('topic-filter').addEventListener('change', render);
 
         // Initial Load
-        loadData('A');
+        loadData('A').then(() => {
+    // Then quietly load the rest of the 16,000 items in the background
+    loadAllSermons();
+});
     </script>
 </body>
 
 </html>
+
 
