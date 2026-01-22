@@ -182,25 +182,29 @@
     }
 
     function setSelection(uid) {
-        selectedUid = uid;
-        const query = document.getElementById('main-search').value;
-        const selected = allEntries.find(x => x._uid === uid);
-        const panel = document.getElementById('details-panel');
+    selectedUid = uid;
+    const query = document.getElementById('main-search').value;
+    const selected = allEntries.find(x => x._uid === uid);
+    const panel = document.getElementById('details-panel');
+    
+    if(selected) {
+        // We use the raw words here. If you want the colors back later, 
+        // we can add the translator back once the basic clicking works.
+        const displayText = selected.words || "";
         
-        if(selected) {
-            panel.innerHTML = `
-            <div class="action-bar">
-                <button class="btn btn-gray" onclick="copyContent()">📋 Copy</button>
-                <button class="btn btn-blue" onclick="exportWord()">📄 Word</button>
-                ${checkedUids.size > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">📦 Export ${checkedUids.size}</button>` : ''}
-            </div>
-            <div class="scroll-content">
-                <h1 id="export-title" style="color:#f59e0b; margin-bottom:20px;">${highlight(selected.title, query)}</h1>
-                <div id="sermon-display" style="white-space: pre-wrap; font-family: 'Courier New', monospace;">${highlight(selected.words, query)}</div>
-            </div>`;
-        }
-        renderSidebar(); // Refresh sidebar to show active state
+        panel.innerHTML = `
+        <div class="action-bar">
+            <button class="btn btn-gray" onclick="copyContent()">📋 Copy</button>
+            <button class="btn btn-blue" onclick="exportWord()">📄 Word</button>
+            ${checkedUids.size > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">📦 Export ${checkedUids.size}</button>` : ''}
+        </div>
+        <div class="scroll-content">
+            <h1 id="export-title" style="color:#f59e0b; margin-bottom:20px;">${highlight(selected.title, query)}</h1>
+            <div id="sermon-display" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 11pt; color: #e5e7eb;">${highlight(displayText, query)}</div>
+        </div>`;
     }
+    renderSidebar(); 
+}
 
     function toggleCheck(id) { 
         checkedUids.has(id) ? checkedUids.delete(id) : checkedUids.add(id); 
@@ -208,35 +212,42 @@
     }
 
     function copyContent() {
-        const selected = allEntries.find(x => x._uid === selectedUid);
-        if (!selected) return;
-        // Copy the RAW text so Notepad++ sees the formatting/font data
-        navigator.clipboard.writeText(selected.words).then(() => alert("Copied Raw Text!"));
-    }
+    const selected = allEntries.find(x => x._uid === selectedUid);
+    if (!selected) return;
+    
+    // This copies the raw data (with the hidden formatting characters) 
+    // so it looks right when pasted into Notepad++
+    const storage = document.createElement('textarea');
+    storage.value = selected.words;
+    document.body.appendChild(storage);
+    storage.select();
+    document.execCommand('copy');
+    document.body.removeChild(storage);
+    alert("Copied to clipboard!");
+}
 
     function exportWord() {
-        const selected = allEntries.find(x => x._uid === selectedUid);
-        if (!selected) return;
+    const selected = allEntries.find(x => x._uid === selectedUid);
+    if (!selected) return;
 
-        // Using Windows-1252 charset helps Word interpret the "High-Bit" data we saw in Hex
-        const html = `
-            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
-            <head><meta charset="windows-1252"><style>
-                body { font-family: 'Courier New', monospace; font-size: 11pt; }
-                .pre-content { white-space: pre-wrap; mso-white-space-treatment: preserve; }
-            </style></head>
-            <body>
-                <h1>${selected.title}</h1>
-                <div class="pre-content">${selected.words}</div>
-            </body></html>`;
+    // We use the raw text and tell Word to use the Windows-1252 encoding 
+    // which helps it see the high-bit characters from the 80s database.
+    const htmlHeader = `<html><head><meta charset="windows-1252"><style>
+        body { font-family: 'Courier New', monospace; font-size: 10pt; line-height: 1.1; }
+        pre { white-space: pre-wrap; mso-white-space-treatment: preserve; }
+    </style></head><body>`;
+    
+    const content = `<h1>${selected.title}</h1><pre>${selected.words}</pre>`;
+    const htmlFooter = `</body></html>`;
 
-        const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${selected.title}.doc`;
-        link.click();
-    }
+    const blob = new Blob([htmlHeader + content + htmlFooter], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${selected.title.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
     function bulkExport() {
         const selectedItems = allEntries.filter(x => checkedUids.has(x._uid));
@@ -261,6 +272,7 @@
 </script>
 </body>
 </html>
+
 
 
 
