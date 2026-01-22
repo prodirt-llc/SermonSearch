@@ -239,14 +239,8 @@
 
     function cleanText(text) {
         if (!text) return text;
-        // Replace \u0014 with double newline (paragraph break)
-        let result = text.replace(/\u0014/g, '\n');
-        // Remove other control characters but preserve actual whitespace/newlines
-        result = result.replace(/[\u0000-\u0008\u000B-\u0013\u0015-\u001F\u007F-\u009F]/g, '');
-        // Clean up excessive blank lines (more than 2 consecutive)
-        result = result.replace(/\n\n\n+/g, '\n\n');
-        // Remove leading/trailing whitespace on each line but keep the line structure
-        result = result.split('\n').map(line => line.trim()).join('\n');
+        // Just remove \u0014 and other control characters, keep everything else
+        let result = text.replace(/[\u0000-\u0013\u0015-\u001F\u007F-\u009F]/g, '');
         return result.trim();
     }
 
