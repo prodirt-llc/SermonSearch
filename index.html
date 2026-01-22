@@ -209,38 +209,42 @@
     }
 
     function copyContent() {
-        const text = document.getElementById('sermon-display').innerText;
-        navigator.clipboard.writeText(text).then(() => alert("Copied!"));
-    }
+    // We pull directly from allEntries to ensure we get the 
+    // "High-Bit" data that Notepad++ likes.
+    const selected = allEntries.find(x => x._uid === selectedUid);
+    if (!selected) return;
 
-    function exportWord() {
-    const title = document.getElementById('export-title').innerText;
-    const contentHtml = document.getElementById('sermon-display').innerHTML;
+    // Create a hidden textarea to preserve the raw binary string
+    const el = document.createElement('textarea');
+    el.value = selected.words;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
     
-    // We wrap the colored HTML in a Word-friendly envelope
-    const html = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
-        <head><meta charset="utf-8">
-        <style>
-            body { font-family: 'Courier New', monospace; font-size: 11pt; }
-            /* This is the magic CSS for Word */
-            .sermon-body { 
-                white-space: pre-wrap; 
-                mso-white-space-treatment: preserve; 
-            }
-            span { display: inline; }
-        </style>
-        </head>
-        <body>
-            <h1>${title}</h1>
-            <div class="sermon-body">${contentHtml}</div>
-        </body></html>`;
+    alert("Copied Raw Format!");
+}
 
-    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+function exportWord() {
+    const selected = allEntries.find(x => x._uid === selectedUid);
+    if (!selected) return;
+
+    // Use a 'Literal' blob to prevent the browser from 
+    // re-encoding the "High-Bit" characters.
+    const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                    <head><meta charset='windows-1252'><style>
+                        body { font-family: 'Courier New', monospace; font-size: 11pt; white-space: pre-wrap; }
+                    </style></head><body>`;
+    const footer = `</body></html>`;
+    
+    // We wrap the raw words in a <pre> tag
+    const content = `<h1>${selected.title}</h1><pre>${selected.words}</pre>`;
+
+    const blob = new Blob([header + content + footer], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${title}.doc`;
+    link.download = `${selected.title}.doc`;
     link.click();
 }
 
@@ -346,6 +350,7 @@ function decodeHighBitFormatting(text) {
 </script>
 </body>
 </html>
+
 
 
 
