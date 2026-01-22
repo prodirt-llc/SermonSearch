@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sermon Database Viewer</title>
     <style>
-        /* 1. LAYOUT & COLOR */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Roboto, sans-serif;
@@ -13,21 +12,28 @@
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* 2. HEADER & SEARCH */
+        /* HEADER FIXED */
         header { background: #1e293b; padding: 12px 20px; border-bottom: 2px solid #334155; z-index: 100; }
-        .header-flex { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-        .search-area { display: flex; gap: 10px; align-items: center; }
+        .header-flex { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
         
-        input, select {
-            padding: 10px; background: #0f172a; border: 1px solid #475569;
-            color: white; border-radius: 6px; font-size: 1rem;
+        .search-area { display: flex; gap: 10px; align-items: center; flex-grow: 1; justify-content: flex-end; }
+        
+        /* Fixed Search Inputs */
+        .search-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
-        #topic-filter { width: 250px; } /* Fixed width so it can't blow out UI */
+        .search-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
+        
+        input {
+            padding: 10px; background: #0f172a; border: 1px solid #475569;
+            color: white; border-radius: 6px; font-size: 1rem; width: 280px;
+        }
 
-        /* 3. MAIN CONTAINER */
+        /* MAIN CONTAINER */
         .main-container { display: flex; flex: 1; overflow: hidden; }
         
-        /* Sidebar */
         .sidebar {
             width: 350px; min-width: 350px; background: #111827; 
             border-right: 1px solid #334155; display: flex; flex-direction: column;
@@ -35,31 +41,27 @@
         .results-list { flex: 1; overflow-y: auto; }
         .result-item {
             padding: 12px 15px; border-bottom: 1px solid #1e293b; cursor: pointer;
-            display: flex; align-items: center; gap: 12px; width: 100%;
-            background: transparent; color: inherit; text-align: left;
+            width: 100%; background: transparent; color: inherit; text-align: left;
         }
         .result-item:hover { background: #1e293b; }
         .result-item.active { background: #1e3a8a; border-left: 5px solid #f59e0b; }
 
-        /* Reading Panel */
-        .details-panel { flex: 1; display: flex; flex-direction: column; background: #0f172a; position: relative; }
+        .details-panel { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
         
-        /* STICKY TOP BAR */
         .sticky-controls {
             background: #1e293b; padding: 12px 30px; border-bottom: 1px solid #334155;
-            display: flex; gap: 15px; align-items: center; justify-content: flex-start;
+            display: flex; gap: 15px; align-items: center;
         }
 
         .scroll-content { flex: 1; overflow-y: auto; padding: 40px; }
 
-        /* 4. CONTENT DISPLAY */
+        /* PASTOR TEXT DISPLAY */
         #display-words {
-            font-size: 1.6rem; line-height: 1.8; background: #1e293b;
+            font-size: 1.65rem; line-height: 1.8; background: #1e293b;
             padding: 30px; border-radius: 12px; 
             white-space: pre-wrap; tab-size: 4; 
             color: #ffffff; border: 1px solid #334155;
         }
-        mark { background: #fde047; color: black; font-weight: bold; }
 
         .btn {
             padding: 10px 18px; border-radius: 6px; border: none; font-weight: bold;
@@ -69,7 +71,6 @@
         .btn-gray { background: #475569; color: white; }
         .btn-red { background: #be123c; color: white; }
 
-        /* LOADING OVERLAY */
         #loading-overlay {
             position: fixed; inset: 0; background: #0f172a;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -90,11 +91,15 @@
                 <span id="stat-count" style="font-size: 0.75rem; color: #94a3b8;">Initializing...</span>
             </div>
             <div class="search-area">
-                <input type="text" id="search-input" placeholder="Search keywords...">
-                <select id="topic-filter">
-                    <option value="">All Topics</option>
-                </select>
-                <button class="btn btn-red" onclick="resetFilters()">Reset View</button>
+                <div class="search-input-group">
+                    <span class="search-label">1. Search Content</span>
+                    <input type="text" id="search-input" placeholder="Type words here...">
+                </div>
+                <div class="search-input-group">
+                    <span class="search-label">2. Search Topics</span>
+                    <input type="text" id="topic-search" placeholder="Type topic here...">
+                </div>
+                <button class="btn btn-red" onclick="resetFilters()" style="margin-top: 15px;">Reset All</button>
             </div>
         </div>
     </header>
@@ -104,7 +109,13 @@
             <div class="results-list" id="results-list"></div>
         </div>
         <div class="details-panel" id="details-panel">
+            <div id="panel-content" style="height: 100%; display: flex; flex-direction: column;">
+                <div style="padding:100px; text-align:center; color:#475569;">
+                    <h2>Welcome, Pastor.</h2>
+                    <p>Search by content or topic above, then select a sermon.</p>
+                </div>
             </div>
+        </div>
     </div>
 
     <script>
@@ -113,7 +124,6 @@
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
         alphabet.push("OTH");
 
-        // CLEANER: Specifically keeps \n and \t but nukes the weird boxes
         function scrub(text) {
             if (!text) return "";
             return text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFD]/g, "").trim();
@@ -132,38 +142,22 @@
                         });
                     }
                 } catch (e) {}
-                document.getElementById('loading-status').innerText = `Syncing: ${allEntries.length.toLocaleString()} entries...`;
+                document.getElementById('loading-status').innerText = `Loading: ${allEntries.length.toLocaleString()} sermons...`;
             }
-            finishInit();
-        }
-
-        function finishInit() {
             allEntries.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-            buildTopics();
-            render();
             document.getElementById('loading-overlay').style.display = 'none';
-        }
-
-        function buildTopics() {
-            let topics = new Set();
-            allEntries.forEach(e => (e.topics || []).forEach(t => topics.add(t)));
-            let dropdown = document.getElementById('topic-filter');
-            Array.from(topics).sort().forEach(t => {
-                let opt = document.createElement('option');
-                opt.value = t; opt.textContent = t; dropdown.appendChild(opt);
-            });
+            render();
         }
 
         function resetFilters() {
             document.getElementById('search-input').value = "";
-            document.getElementById('topic-filter').value = "";
+            document.getElementById('topic-search').value = "";
             render();
         }
 
         function exportToWord() {
             const title = document.getElementById('display-title').innerText;
-            const content = document.getElementById('display-words').innerText; // Pulls cleaned text from UI
-            
+            const content = document.getElementById('display-words').innerText;
             const html = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
                 <head><meta charset="utf-8"></head>
@@ -172,7 +166,6 @@
                     <div style="white-space:pre-wrap; font-size:12pt; margin-top:20px; font-family:serif;">${content}</div>
                 </body>
                 </html>`;
-
             const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
@@ -182,45 +175,44 @@
 
         function render() {
             const query = document.getElementById('search-input').value.toLowerCase();
-            const topic = document.getElementById('topic-filter').value;
+            const topicQuery = document.getElementById('topic-search').value.toLowerCase();
 
             const filtered = allEntries.filter(e => {
-                const matchQuery = (e.title + e.words).toLowerCase().includes(query);
-                const matchTopic = !topic || (e.topics || []).includes(topic);
-                return matchQuery && matchTopic;
+                const matchContent = (e.title + e.words).toLowerCase().includes(query);
+                const matchTopic = !topicQuery || (e.topics || []).some(t => t.toLowerCase().includes(topicQuery));
+                return matchContent && matchTopic;
             });
 
-            document.getElementById('stat-count').innerText = `${filtered.length.toLocaleString()} results found`;
+            document.getElementById('stat-count').innerText = `${filtered.length.toLocaleString()} found`;
 
             let listHtml = '';
-            filtered.forEach(e => {
+            filtered.slice(0, 500).forEach(e => { // Limit list view to 500 for speed
                 const active = selectedUid === e._uid ? 'active' : '';
                 listHtml += `<div class="result-item ${active}" onclick="selectSermon('${e._uid}')">
                     <div style="font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${e.title}</div>
+                    <div style="font-size:0.7rem; color:#64748b;">${(e.topics || []).slice(0,2).join(', ')}</div>
                 </div>`;
             });
             document.getElementById('results-list').innerHTML = listHtml;
 
             const selected = allEntries.find(x => x._uid === selectedUid);
-            const panel = document.getElementById('details-panel');
+            const panel = document.getElementById('panel-content');
             if (selected) {
                 panel.innerHTML = `
                     <div class="sticky-controls">
-                        <button class="btn btn-gray" onclick="navigator.clipboard.writeText(document.getElementById('display-words').innerText); alert('Copied!');">📋 Copy Text</button>
+                        <button class="btn btn-gray" onclick="navigator.clipboard.writeText(document.getElementById('display-words').innerText); alert('Copied!');">📋 Copy</button>
                         <button class="btn btn-blue" onclick="exportToWord()">📄 Word Export</button>
                     </div>
                     <div class="scroll-content">
                         <h1 id="display-title" style="font-size:2.2rem; color:#f59e0b; margin-bottom:15px;">${selected.title}</h1>
                         <div id="display-words">${selected.words}</div>
                     </div>`;
-            } else {
-                panel.innerHTML = `<div style="padding:100px; text-align:center; color:#475569;"><h2>Select a sermon to view details</h2></div>`;
             }
         }
 
         function selectSermon(id) { selectedUid = id; render(); }
         document.getElementById('search-input').addEventListener('input', render);
-        document.getElementById('topic-filter').addEventListener('change', render);
+        document.getElementById('topic-search').addEventListener('input', render);
         loadData();
     </script>
 </body>
