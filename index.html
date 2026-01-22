@@ -314,21 +314,21 @@
             <div class="scroll-content">
                 <h1 id="export-title" style="color:#f59e0b; margin-bottom:20px;">${highlight(selected.title, query)}</h1>
                 
-                <div class="section-box">
+                <div style="margin: 20px 0;">
                     <div class="section-title">📌 Topics</div>
                     <div class="topics-box">
                         ${(selected.topics || []).map(t => `<span class="tag">${t}</span>`).join('')}
                     </div>
                 </div>
 
-                <div class="section-box">
+                <div style="margin: 20px 0;">
                     <div class="section-title">📖 Scripture References</div>
                     <div class="scriptures-box">
                         ${(selected.scriptures || []).map(s => `<span class="scripture-ref">${s}</span>`).join('')}
                     </div>
                 </div>
 
-                <div class="section-box">
+                <div style="margin: 20px 0;">
                     <div class="section-title">📝 Content</div>
                     <div id="sermon-display" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 11pt; color: #e5e7eb;">${highlight(displayText, query)}</div>
                 </div>
