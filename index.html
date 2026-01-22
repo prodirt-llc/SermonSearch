@@ -213,30 +213,45 @@
         navigator.clipboard.writeText(text).then(() => alert("Copied!"));
     }
 
-    // THE FIXED EXPORT FUNCTION
     function exportWord() {
-        const title = document.getElementById('export-title').innerText;
-        const content = document.getElementById('sermon-display').innerText;
-        
-        // We use 'white-space: pre-wrap' inside the Word XML to force it to respect line breaks
-        const html = `
-            <html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-            <head><meta charset="utf-8"><style>
-                body { font-family: 'Courier New', Courier, monospace; font-size: 11pt; }
-                .text-block { white-space: pre-wrap; mso-white-space-treatment: preserve; }
-            </style></head>
-            <body>
-                <h1 style="font-family: Arial;">${title}</h1>
-                <div class="text-block">${content}</div>
-            </body></html>`;
+    const title = document.getElementById('export-title').innerText;
+    const content = document.getElementById('sermon-display').innerText;
 
-        const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${title}.doc`;
-        link.click();
-    }
+    // This specific header tells Word to treat the content as "Pre-formatted"
+    // which prevents the 'squashing' you see in your screenshots.
+    const html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+              xmlns:w="urn:schemas-microsoft-com:office:word" 
+              xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="utf-8">
+        <style>
+            body { 
+                font-family: 'Courier New', monospace; 
+                font-size: 11pt; 
+                line-height: 1.2;
+            }
+            .sermon-content { 
+                white-space: pre-wrap; 
+                mso-white-space-treatment: preserve;
+                display: block;
+            }
+        </style>
+        </head>
+        <body>
+            <h1 style="font-family: Arial; border-bottom: 1px solid black;">${title}</h1>
+            <div class="sermon-content">${content}</div>
+        </body></html>`;
+
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
+    link.click();
+    
+    // Clean up memory
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
     function bulkExport() {
         alert("Bulk export is being rebuilt to support the new formatting fix. Individual export is ready!");
@@ -259,6 +274,7 @@
 </script>
 </body>
 </html>
+
 
 
 
