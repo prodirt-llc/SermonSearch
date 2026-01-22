@@ -92,7 +92,7 @@
                 <div class="header-title">
                     <div>
                         <h1>📚 Sermon Database</h1>
-                        <p id="entry-count">0 entries loaded</p>
+                        <p id="entry-count">0 of 0 entries</p>
                     </div>
                 </div>
                 <div class="search-bar">
@@ -112,15 +112,14 @@
                 </div>
             </div>
         </main>
-
         <footer id="footer">Sermon Database • Ready</footer>
     </div>
 
     <script>
         let allEntries = [];
-        let selectedEntryId = null; // Store the ID, not the whole object
-        let chunksLoadedCount = 0;
-    const totalChunks = 27; // 26 letters + OTH
+    let loadedChunks = new Set();
+    let chunksLoadedCount = 0;
+    const totalChunks = 27; // A-Z + OTH
 
     async function loadChunk(chunkName) {
         const name = chunkName.toUpperCase();
@@ -128,24 +127,22 @@
 
         try {
             const response = await fetch(`./sermons_${name}.json`);
-            if (!response.ok) {
-                // Even if it fails, we count it so the bar finishes
-                updateProgress(); 
-                return;
-            }
-            
-            const data = await response.json();
-            data.forEach((item, index) => {
-                item._uid = `${name}-${index}`;
-            });
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Assign unique internal ID for stable selection
+                data.forEach((item, index) => {
+                    item._uid = `${name}-${index}`;
+                });
 
-            allEntries = [...allEntries, ...data];
-            loadedChunks.add(name);
-            updateProgress();
-            
+                allEntries = [...allEntries, ...data];
+                loadedChunks.add(name);
+            }
         } catch (e) {
-            console.error("Failed to load:", name, e);
-            updateProgress();
+            console.warn(`Could not load sermons_${name}.json:`, e);
+        } finally {
+            // This ensures the counter increments even if the file is missing
+            updateProgress(); 
         }
     }
 
@@ -153,8 +150,11 @@
         chunksLoadedCount++;
         const percentage = Math.round((chunksLoadedCount / totalChunks) * 100);
         
-        document.getElementById('progress-bar').style.width = percentage + '%';
-        document.getElementById('loading-status').textContent = `${percentage}% complete (${chunksLoadedCount}/${totalChunks})`;
+        const bar = document.getElementById('progress-bar');
+        const status = document.getElementById('loading-status');
+        
+        if (bar) bar.style.width = percentage + '%';
+        if (status) status.textContent = `${percentage}% - Processed ${chunksLoadedCount} of ${totalChunks} alphabet files`;
 
         if (chunksLoadedCount === totalChunks) {
             finishLoading();
@@ -162,21 +162,22 @@
     }
 
     function finishLoading() {
-        // Sort the final complete list once
+        // Sort the entire database once everything is in memory
         allEntries.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
         
-        // Update Filters and UI
         updateTopicFilter();
         render();
 
-        // Hide overlay and show content
+        // Reveal the UI
         const overlay = document.getElementById('loading-overlay');
-        const main = document.getElementById('main-content');
+        const wrapper = document.getElementById('main-wrapper');
         
         overlay.style.opacity = '0';
+        wrapper.style.display = 'block'; // Ensure wrapper is visible
+        
         setTimeout(() => {
             overlay.style.display = 'none';
-            main.style.opacity = '1';
+            wrapper.style.opacity = '1';
         }, 500);
     }
 
@@ -184,9 +185,12 @@
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
         alphabet.push("OTH");
         
-        // We load them all. Chunks increment the progress bar.
+        // Trigger all fetches simultaneously
         await Promise.all(alphabet.map(letter => loadChunk(letter)));
     }
+
+    // Call this at the very bottom of your script
+    loadEverything();
 
     // Replace your start call at the bottom with just this:
     loadEverything();
@@ -278,6 +282,7 @@
     </script>
 </body>
 </html>
+
 
 
 
