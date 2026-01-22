@@ -26,21 +26,26 @@
         #progress-bar { width: 0%; height: 100%; background: #eabb22; transition: width 0.2s; }
 
         /* 3. HEADER & SEARCH (Fixed widths) */
-        header { background: #1e293b; padding: 12px 20px; border-bottom: 2px solid #334155; }
+        header { background: #1e293b; padding: 12px 20px; border-bottom: 2px solid #334155; z-index: 100; }
         .header-flex { display: flex; align-items: center; gap: 20px; }
-        .search-area { display: flex; gap: 10px; flex: 1; justify-content: flex-end; }
+        .search-area { display: flex; gap: 10px; flex: 1; justify-content: flex-end; align-items: center; }
         
-        input, select {
+        input {
             padding: 10px; background: #0f172a; border: 1px solid #475569;
-            color: white; border-radius: 6px; font-size: 1rem;
+            color: white; border-radius: 6px; font-size: 1rem; width: 350px;
         }
-        input { width: 350px; }
-        select { max-width: 250px; } /* Prevent Topic bar from being huge */
+
+        /* TOPIC DROPDOWN FIX */
+        select {
+            padding: 10px; background: #0f172a; border: 1px solid #475569;
+            color: white; border-radius: 6px; font-size: 1rem; 
+            max-width: 300px; /* Limits width */
+        }
 
         /* 4. MAIN CONTAINER */
         .main-container { display: flex; flex: 1; overflow: hidden; }
         
-        /* Sidebar (Fixed Wonky Sizing) */
+        /* Sidebar */
         .sidebar {
             width: 350px; min-width: 350px; background: #111827; 
             border-right: 1px solid #334155; display: flex; flex-direction: column;
@@ -58,7 +63,7 @@
         /* Reading Panel */
         .details-panel { flex: 1; display: flex; flex-direction: column; background: #0f172a; position: relative; }
         
-        /* FIXED BUTTON BAR (STAYS AT TOP) */
+        /* FIXED BUTTON BAR */
         .sticky-controls {
             background: #1e293b; padding: 15px 30px; border-bottom: 1px solid #334155;
             display: flex; gap: 15px; align-items: center; z-index: 10;
@@ -66,10 +71,12 @@
 
         .scroll-content { flex: 1; overflow-y: auto; padding: 40px; }
 
-        /* 5. PASTOR TEXT STYLES (Ultra High Contrast) */
+        /* 5. CONTENT STYLES (Preserves Tabs/Spacing) */
         .content-box {
             font-size: 1.6rem; line-height: 1.8; background: #1e293b;
-            padding: 30px; border-radius: 12px; white-space: pre-wrap;
+            padding: 30px; border-radius: 12px; 
+            white-space: pre-wrap; /* Crucial for line breaks */
+            tab-size: 4;           /* Preserves tab spacing */
             color: #ffffff; border: 1px solid #334155;
         }
         mark { background: #fde047; color: black; font-weight: bold; padding: 0 4px; border-radius: 3px; }
@@ -129,14 +136,13 @@
         var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
         alphabet.push("OTH");
 
-        // --- SCRUBBER (Cleans "Hieroglyphics" and weird Word boxes) ---
+        // --- UPDATED CLEANER (Preserves \n and \t) ---
         function cleanText(str) {
             if (!str) return "";
             return str
-                .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFD]/g, "") // Removes nulls and control boxes
-                .replace(/\r/g, "") // Removes old carriage returns
-                .replace(/[\u201c\u201d]/g, '"') // Standardizes quotes
-                .replace(/[\u2018\u2019]/g, "'") // Standardizes apostrophes
+                .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFD]/g, "") // Targets only "non-visible" boxes
+                .replace(/[\u201c\u201d]/g, '"') 
+                .replace(/[\u2018\u2019]/g, "'") 
                 .trim();
         }
 
@@ -156,7 +162,7 @@
                         var data = await response.json();
                         for (var j = 0; j < data.length; j++) {
                             data[j]._uid = letter + '-' + j;
-                            data[j].words = cleanText(data[j].words); // Scrub text on load
+                            data[j].words = cleanText(data[j].words); 
                         }
                         allEntries = allEntries.concat(data);
                     }
@@ -165,7 +171,7 @@
                 chunksCount++;
                 var pct = Math.round((chunksCount / alphabet.length) * 100);
                 document.getElementById('progress-bar').style.width = pct + '%';
-                document.getElementById('loading-status').innerText = pct + "% - Processed " + chunksCount + " of " + alphabet.length + " files";
+                document.getElementById('loading-status').innerText = pct + "% - Loaded " + allEntries.length + " entries";
                 
                 if (chunksCount === alphabet.length) { forceStart(); }
             }
@@ -179,14 +185,16 @@
             setTimeout(function() { document.getElementById('loading-overlay').style.display = 'none'; }, 600);
         }
 
+        // --- FORMATTED WORD EXPORT ---
         function exportWord(items) {
             if (items.length === 0) return;
             var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
                        '<head><meta charset="utf-8"></head><body style="font-family:Arial; padding:40px;">';
             for (var i = 0; i < items.length; i++) {
                 var e = items[i];
-                html += '<h1 style="color:#2b5797;">' + e.title + '</h1>';
-                html += '<div style="white-space:pre-wrap; font-size:12pt; margin-top:20px;">' + e.words + '</div>';
+                html += '<h1 style="color:#2b5797; font-size:24pt;">' + e.title + '</h1>';
+                // Using <pre> in Word helps maintain the Pastor's tabs and spacing
+                html += '<pre style="white-space:pre-wrap; font-size:12pt; font-family:Arial; margin-top:20px;">' + e.words + '</pre>';
                 if (items.length > 1) html += '<br style="page-break-before:always">';
             }
             html += '</body></html>';
@@ -257,15 +265,22 @@
             alert("Sermon copied!");
         }
         function quickTopic(t) { document.getElementById('topic-filter').value = t; renderUI(); }
+        
         function buildTopicDropdown() {
             var topics = new Set();
             allEntries.forEach(function(e) { (e.topics || []).forEach(function(t) { topics.add(t); }); });
             var select = document.getElementById('topic-filter');
+            
+            // Re-adding the default option
+            select.innerHTML = '<option value="">All Topics</option>';
+            
             Array.from(topics).sort().forEach(function(t) {
+                if(!t) return;
                 var opt = document.createElement('option');
                 opt.value = t; opt.textContent = t; select.appendChild(opt);
             });
         }
+
         document.getElementById('search-input').addEventListener('input', renderUI);
         document.getElementById('topic-filter').addEventListener('change', renderUI);
         startLoading();
