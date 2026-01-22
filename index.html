@@ -70,10 +70,17 @@
                 if (!response.ok) return;
                 
                 const data = await response.json();
+                
+                // FIX 1: Assign a unique internal ID (_uid) to every item.
+                // This ensures selection works even if "tcaid" is a number or has duplicates.
+                data.forEach((item, index) => {
+                    item._uid = `${name}-${index}`;
+                });
+
                 allEntries = [...allEntries, ...data];
                 loadedChunks.add(name);
                 
-                // Sort by title
+                // Re-sort alphabetically as new chunks arrive
                 allEntries.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
                 
                 updateTopicFilter();
@@ -85,9 +92,7 @@
 
         async function loadEverything() {
             const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-            alphabet.push("OTH"); // Include the non-alphabetic file
-            
-            // Load them all in parallel for speed
+            alphabet.push("OTH");
             await Promise.all(alphabet.map(letter => loadChunk(letter)));
         }
 
@@ -114,46 +119,85 @@
 
             const filtered = allEntries.filter(e => {
                 const matchesSearch = !query || 
-                    e.title?.toLowerCase().includes(query) || 
-                    e.words?.toLowerCase().includes(query);
-                const matchesTopic = !topic || e.topics?.includes(topic);
+                    (e.title || "").toLowerCase().includes(query) || 
+                    (e.words || "").toLowerCase().includes(query) ||
+                    (e.topics || []).some(t => t.toLowerCase().includes(query));
+                const matchesTopic = !topic || (e.topics || []).includes(topic);
                 return matchesSearch && matchesTopic;
             });
 
             const list = document.getElementById('results-list');
-            list.innerHTML = filtered.map(e => `
-                <button class="result-item ${selectedEntry?.tcaid === e.tcaid ? 'active' : ''}" 
-                        onclick="selectSermon('${e.tcaid}')">
-                    <div class="result-title">${e.title}</div>
-                    <div class="result-topics">${(e.topics || []).slice(0,2).join(', ')}</div>
-                </button>
-            `).join('');
+            
+            // FIX 2: Save the current scroll position before updating the list
+            const scrollPos = list.scrollTop;
+            
+            list.innerHTML = filtered.length === 0 
+                ? '<div style="color: #94a3b8; text-align: center; padding: 2rem;">No sermons found</div>'
+                : filtered.map(e => `
+                    <button class="result-item ${selectedEntry?._uid === e._uid ? 'active' : ''}" 
+                            onclick="selectSermon('${e._uid}')">
+                        <div class="result-title">${e.title}</div>
+                        <div class="result-topics">${(e.topics || []).slice(0, 2).join(', ')}</div>
+                    </button>
+                `).join('');
+
+            // FIX 3: Restore the scroll position immediately
+            list.scrollTop = scrollPos;
 
             const details = document.getElementById('details-panel');
             if (selectedEntry) {
+                // RESTORED: Scripture References and proper metadata display
                 details.innerHTML = `
                     <h2 class="details-title">${selectedEntry.title}</h2>
-                    <div class="section"><div class="section-title">🏷️ Topics</div>
-                        <div class="tags">${(selectedEntry.topics || []).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+                    
+                    ${(selectedEntry.topics && selectedEntry.topics.length > 0) ? `
+                        <div class="section">
+                            <div class="section-title">🏷️ Topics</div>
+                            <div class="tags">
+                                ${selectedEntry.topics.map(t => `<span class="tag" onclick="setTopic('${t}')">${t}</span>`).join('')}
+                            </div>
+                        </div>` : ''}
+
+                    ${(selectedEntry.scriptures && selectedEntry.scriptures.length > 0) ? `
+                        <div class="section">
+                            <div class="section-title">📖 Scripture References</div>
+                            <div class="tags">
+                                ${selectedEntry.scriptures.map(s => `<span class="scripture">${s}</span>`).join('')}
+                            </div>
+                        </div>` : ''}
+
+                    <div class="section">
+                        <div class="section-title">📝 Content</div>
+                        <div class="content-box">${selectedEntry.words || 'No content available'}</div>
                     </div>
-                    <div class="section"><div class="section-title">📝 Content</div>
-                        <div class="content-box">${selectedEntry.words || ''}</div>
-                    </div>
+                    
                     <div class="metadata">
-                        <div>ID: ${selectedEntry.tcaid || ''}</div>
-                        <div>Base: ${selectedEntry.base || ''}</div>
+                        ${selectedEntry.base ? `<div class="metadata-item"><span class="metadata-label">Base:</span>${selectedEntry.base}</div>` : ''}
+                        ${selectedEntry.source ? `<div class="metadata-item"><span class="metadata-label">Source:</span>${selectedEntry.source}</div>` : ''}
+                        ${selectedEntry.tcaid !== undefined ? `<div class="metadata-item"><span class="metadata-label">ID:</span>${selectedEntry.tcaid}</div>` : ''}
+                        ${selectedEntry.qsid ? `<div class="metadata-item"><span class="metadata-label">QSID:</span>${selectedEntry.qsid}</div>` : ''}
                     </div>`;
+            } else {
+                details.innerHTML = '<div class="details-empty">Select a sermon to view details</div>';
             }
 
             document.getElementById('entry-count').textContent = `${filtered.length.toLocaleString()} of ${allEntries.length.toLocaleString()} entries`;
+            document.getElementById('footer').textContent = `Sermon Database • ${filtered.length.toLocaleString()} of ${allEntries.length.toLocaleString()} entries`;
         }
 
-        function selectSermon(id) {
-            selectedEntry = allEntries.find(e => e.tcaid === id);
+        function selectSermon(uid) {
+            const found = allEntries.find(e => e._uid === uid);
+            if (found) {
+                selectedEntry = found;
+                render();
+            }
+        }
+
+        function setTopic(topicName) {
+            document.getElementById('topic-filter').value = topicName;
             render();
         }
 
-        // Listen for typing: triggers OTH load for numbers/symbols
         document.getElementById('search-input').addEventListener('input', (e) => {
             const firstChar = e.target.value.charAt(0).toUpperCase();
             if (firstChar && !/^[A-Z]$/.test(firstChar)) {
@@ -164,8 +208,9 @@
 
         document.getElementById('topic-filter').addEventListener('change', render);
 
-        // Initial Start
+        // Initial Load sequence
         loadChunk('A').then(() => loadEverything());
     </script>
 </body>
 </html>
+
