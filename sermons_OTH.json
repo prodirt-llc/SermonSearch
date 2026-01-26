@@ -425,17 +425,6 @@
     "qsid": ""
   },
   {
-    "title": "!BASE=FRED/9999",
-    "words": "",
-    "topics": [],
-    "scriptures": [],
-    "base": "FRED/9999",
-    "source": "3",
-    "mstatus": "",
-    "tcaid": "0",
-    "qsid": ""
-  },
-  {
     "title": "\"GET OVER IT\" IS NOT SO EASY WHEN IT'S YOU",
     "words": "Her name is Mickey Hill.  Here's what she told survivors of the \nOklahoma City bombing and their families in a recent interview with a \ntelevision station in Tampa-St. Petersburg, Florida.\u0014\n\u0014\nGet over it.  Move on.  \"It was a big event,\" she said \"...but so was \nthe O.J. Simpson case, so was the bombing in New York City.\"\u0014\n\u0014\nIt's galling enough that she said it.  But here's the kicker.  Mickey \nHill's son is Timothy McVeigh, the man who sits on Death Row for \nmasterminding the explosion that left 168 children, women, and men \ndead.\u0014\n\u0014\n\"He was found guilty,\" she said of her son.  \"I had my cry.  I went \nhome, and I got on with my life.\"\u0014\n\u0014\n--Leonard Pitts, columnist, Tribune Media Services, 12/13/99\u0014",
     "topics": [
@@ -4800,4 +4789,5 @@
     "tcaid": "4189",
     "qsid": "19921"
   }
+
 ]
