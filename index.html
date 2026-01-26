@@ -8,68 +8,78 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: #0f172a; color: #f1f5f9;
+            background: #f5f5f5; color: #333;
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        header { background: #1e293b; padding: 12px 20px; border-bottom: 2px solid #334155; z-index: 1000; }
+        header { background: #ffffff; padding: 12px 20px; border-bottom: 2px solid #ddd; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .header-flex { display: flex; align-items: center; justify-content: space-between; }
         
-        .search-controls { display: flex; gap: 10px; align-items: center; }
+        .search-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         input {
-            padding: 10px; background: #0f172a; border: 1px solid #475569;
-            color: white; border-radius: 6px; font-size: 0.9rem; width: 220px;
+            padding: 10px; background: #ffffff; border: 1px solid #ccc;
+            color: #333; border-radius: 6px; font-size: 0.9rem; width: 220px;
         }
 
         /* DROPDOWN FIXES */
         .dropdown-container { position: relative; width: 250px; }
         .dropdown-trigger {
-            padding: 10px; background: #0f172a; border: 1px solid #475569;
-            border-radius: 6px; cursor: pointer; color: #f1f5f9;
+            padding: 10px; background: #ffffff; border: 1px solid #ccc;
+            border-radius: 6px; cursor: pointer; color: #333;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;
         }
+        .dropdown-trigger:hover { background: #f9f9f9; }
         .dropdown-menu {
             position: absolute; top: 105%; left: 0; width: 100%;
-            background: #1e293b; border: 1px solid #475569; border-radius: 6px;
-            max-height: 350px; overflow-y: auto; display: none; z-index: 2000;
+            background: #ffffff; border: 1px solid #ccc; border-radius: 6px;
+            max-height: 350px; overflow-y: auto; display: none; z-index: 2000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .dropdown-menu.show { display: block; }
-        .dropdown-search { width: 100%; border: none; border-bottom: 1px solid #475569; position: sticky; top: 0; z-index: 10; }
-        .dropdown-item { padding: 10px; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid #334155; }
-        .dropdown-item:hover { background: #334155; }
+        .dropdown-search { width: 100%; border: none; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 10; padding: 8px; }
+        .dropdown-item { padding: 10px; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid #f0f0f0; }
+        .dropdown-item:hover { background: #f5f5f5; }
+
+        /* LOGIN */
+        #login-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .login-box h2 { margin-bottom: 20px; color: #333; }
+        .login-box input { width: 250px; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; }
+        .login-box button { padding: 12px 30px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .login-box button:hover { background: #0056b3; }
+        .login-error { color: red; margin-top: 10px; font-size: 0.9rem; }
 
         /* LOADING BAR */
         #loading-overlay {
-            position: fixed; inset: 0; background: #0f172a;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+            position: fixed; inset: 0; background: #f5f5f5;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9998;
         }
-        .loader-bar { width: 350px; height: 12px; background: #1e293b; border-radius: 20px; margin: 20px; overflow: hidden; border: 1px solid #334155; }
-        #progress-fill { width: 0%; height: 100%; background: #f59e0b; transition: width 0.2s; }
+        .loader-bar { width: 350px; height: 12px; background: #e0e0e0; border-radius: 20px; margin: 20px; overflow: hidden; border: 1px solid #ccc; }
+        #progress-fill { width: 0%; height: 100%; background: #007bff; transition: width 0.2s; }
 
         .main-container { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 380px; min-width: 380px; background: #111827; border-right: 1px solid #334155; display: flex; flex-direction: column; }
-        .results-list { flex: 1; overflow-y: auto; will-change: transform; }
+        .sidebar { width: 380px; min-width: 380px; background: #ffffff; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .results-list { flex: 1; overflow-y: auto; }
         
         .result-item {
-            padding: 15px; border-bottom: 1px solid #1e293b; cursor: pointer;
+            padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer;
             display: flex; gap: 15px; align-items: flex-start;
         }
-        .result-item.active { background: #1e3a8a; border-left: 5px solid #f59e0b; }
+        .result-item.active { background: #e3f2fd; border-left: 5px solid #007bff; }
+        .result-item:hover { background: #f9f9f9; }
         .check-box { width: 20px; height: 20px; cursor: pointer; flex-shrink: 0; }
 
-        .details-panel { flex: 1; display: flex; flex-direction: column; background: #0f172a; overflow: hidden; }
-        .action-bar { padding: 12px 30px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; gap: 15px; flex-shrink: 0; }
+        .details-panel { flex: 1; display: flex; flex-direction: column; background: #ffffff; overflow: hidden; }
+        .action-bar { padding: 12px 30px; background: #f5f5f5; border-bottom: 1px solid #ddd; display: flex; gap: 15px; flex-shrink: 0; }
         .scroll-content { flex: 1; overflow-y: auto; padding: 40px; scroll-behavior: smooth; }
         
-        /* SECTION STYLING - NO BOXES */
-        .section-box {
-            padding: 15px 0;
-            margin: 20px 0;
-            display: block;
-        }
-
         .section-title {
-            color: #f59e0b;
+            color: #007bff;
             font-weight: bold;
             font-size: 0.9rem;
             margin-bottom: 10px;
@@ -78,90 +88,113 @@
             display: block;
         }
 
-        #sermon-display { 
-            font-size: 1.6rem; line-height: 1.8; white-space: pre-wrap; 
-            background: #1e293b; padding: 40px; border-radius: 12px; 
-            color: #ffffff; border: 1px solid #334155; tab-size: 4;
-            font-family: 'Courier New', monospace;
-        }
-
         .topics-box, .scriptures-box, .content-box {
             display: flex; flex-wrap: wrap; gap: 8px;
         }
 
         .tag {
-            background: #1e3a8a;
-            color: #93c5fd;
+            background: #e3f2fd;
+            color: #0056b3;
             padding: 6px 12px;
             border-radius: 4px;
             font-size: 0.85rem;
         }
 
         .scripture-ref {
-            background: rgba(59, 130, 246, 0.2);
-            color: #93c5fd;
+            background: #e8f5e9;
+            color: #2e7d32;
             padding: 6px 12px;
             border-radius: 4px;
             font-size: 0.85rem;
         }
 
-        mark { background: #f59e0b; color: black; border-radius: 2px; }
+        mark { background: #fff176; color: #000; border-radius: 2px; }
+
+        #sermon-display { 
+            font-size: 14pt; line-height: 1.8; white-space: pre-wrap; 
+            background: #fafafa; padding: 20px; border-radius: 8px; 
+            color: #333; border: 1px solid #ddd; tab-size: 4;
+            font-family: 'Courier New', monospace;
+            word-wrap: break-word;
+        }
 
         .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-        .btn-blue { background: #2563eb; } .btn-gray { background: #475569; } .btn-orange { background: #d97706; } .btn-red { background: #be123c; } .btn-green { background: #16a34a; }
+        .btn-blue { background: #007bff; } .btn-blue:hover { background: #0056b3; }
+        .btn-gray { background: #6c757d; } .btn-gray:hover { background: #5a6268; }
+        .btn-orange { background: #fd7e14; } .btn-orange:hover { background: #e06c00; }
+        .btn-red { background: #dc3545; } .btn-red:hover { background: #c82333; }
+        .btn-green { background: #28a745; } .btn-green:hover { background: #218838; }
 
         /* FILE INDICATOR */
         .file-indicator {
             padding: 12px 40px;
-            background: #1e293b;
-            border-top: 1px solid #334155;
-            border-bottom: 1px solid #334155;
+            background: #f5f5f5;
+            border-top: 1px solid #ddd;
             font-size: 0.85rem;
-            color: #cbd5e1;
+            color: #666;
             font-family: 'Courier New', monospace;
         }
         .file-indicator strong {
-            color: #f59e0b;
+            color: #007bff;
         }
 
         /* EDIT MODE */
         .edit-modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 5000;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 5000;
             align-items: center; justify-content: center;
         }
         .edit-modal.show { display: flex; }
         .edit-form {
-            background: #1e293b; padding: 30px; border-radius: 12px; width: 90%; max-width: 700px;
-            max-height: 90vh; overflow-y: auto; border: 1px solid #475569;
+            background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 700px;
+            max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #cbd5e1; font-weight: bold; }
+        .form-group label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; }
         .form-group input, .form-group textarea, .form-group select {
-            width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569;
-            color: white; border-radius: 6px; font-family: inherit;
+            width: 100%; padding: 10px; background: #fafafa; border: 1px solid #ccc;
+            color: #333; border-radius: 6px; font-family: inherit;
         }
         .form-group textarea { min-height: 200px; resize: vertical; }
     </style>
 </head>
 <body>
 
+    <!-- LOGIN SCREEN -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>Sermon Database</h2>
+            <input type="password" id="password-input" placeholder="Enter password" onkeypress="if(event.key==='Enter') login()">
+            <br>
+            <button onclick="login()">Login</button>
+            <div id="login-error" class="login-error"></div>
+        </div>
+    </div>
+
     <div id="loading-overlay">
         <h2>OPTIMIZING DATABASE</h2>
         <div class="loader-bar"><div id="progress-fill"></div></div>
-        <div id="load-status" style="color: #64748b;">Ready...</div>
+        <div id="load-status" style="color: #666;">Ready...</div>
     </div>
 
     <header>
         <div class="header-flex">
-            <div><h2 style="color:#f59e0b">Sermon Browser</h2><small id="stat-count">0 entries</small></div>
+            <div><h2 style="color:#007bff">Sermon Browser</h2><small id="stat-count">0 entries</small></div>
             <div class="search-controls">
                 <input type="text" id="main-search" placeholder="Quick Search...">
                 
                 <div class="dropdown-container">
-                    <div class="dropdown-trigger" id="topic-trigger" onclick="toggleDropdown()">Filter by Topic</div>
+                    <div class="dropdown-trigger" id="topic-trigger" onclick="toggleDropdown('topic')">Filter by Topic</div>
                     <div class="dropdown-menu" id="topic-menu">
                         <input type="text" id="topic-search-box" class="dropdown-search" placeholder="Search topics..." onclick="event.stopPropagation()">
                         <div id="topic-list-target"></div>
+                    </div>
+                </div>
+
+                <div class="dropdown-container">
+                    <div class="dropdown-trigger" id="base-trigger" onclick="toggleDropdown('base')">Filter by Source</div>
+                    <div class="dropdown-menu" id="base-menu">
+                        <input type="text" id="base-search-box" class="dropdown-search" placeholder="Search sources..." onclick="event.stopPropagation()">
+                        <div id="base-list-target"></div>
                     </div>
                 </div>
 
@@ -173,7 +206,7 @@
     <div class="main-container">
         <div class="sidebar"><div class="results-list" id="results-list"></div></div>
         <div class="details-panel" id="details-panel">
-             <div style="text-align:center; padding-top: 100px; color: #475569;">
+             <div style="text-align:center; padding-top: 100px; color: #999;">
                 <h2>Select a sermon</h2>
             </div>
         </div>
@@ -182,7 +215,7 @@
     <!-- EDIT MODAL -->
     <div id="edit-modal" class="edit-modal">
         <div class="edit-form">
-            <h2 style="margin-bottom: 20px; color: #f59e0b;">Edit Sermon</h2>
+            <h2 style="margin-bottom: 20px; color: #007bff;">Edit Sermon</h2>
             <div class="form-group">
                 <label>Title</label>
                 <input type="text" id="edit-title">
@@ -212,34 +245,38 @@
     let selectedUid = null;
     let checkedUids = new Set();
     let activeTopic = "";
+    let activeBase = "";
     let searchTimeout = null;
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     alphabet.push("OTH");
 
-    // High-bit character mapping (legacy encoding)
-    const HIGH_BIT_MAP = {
-        '\x81': '[LT]',
-        '\x82': '[GT]',
-        '\x83': '[TM]',
-        '\x84': '[EUR]',
-        '\x85': '[ELLIPSIS]',
-        '\x86': '[DAGGER]',
-        '\x87': '[DDAG]',
-        '\x88': '[CARET]',
-        '\x8c': '[OE]',
-        '\x91': '[QUOTE]',
-        '\x92': '[QUOTE]',
-        '\x93': '[DQUOTE]',
-        '\x94': '[DQUOTE]',
-        '\x95': '[BULLET]',
-        '\x96': '[NDASH]',
-        '\x97': '[MDASH]',
-        '\x99': '[TM]'
-    };
+    // Password: "password123" -> hashed to this value
+    const PASSWORD_HASH = "ef92b778bafe771e89245d171bafcd62f1d1816480735fc2fb2b011092f4e3d5";
+
+    function sha256(str) {
+        return Promise.resolve().then(() => {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            return crypto.subtle.digest('SHA-256', data).then(hashBuffer => {
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            });
+        });
+    }
+
+    async function login() {
+        const pwd = document.getElementById('password-input').value;
+        const hash = await sha256(pwd);
+        if (hash === PASSWORD_HASH) {
+            document.getElementById('login-overlay').style.display = 'none';
+            loadData();
+        } else {
+            document.getElementById('login-error').innerText = 'Invalid password';
+        }
+    }
 
     function cleanText(text) {
         if (!text) return text;
-        // Just remove \u0014 and other control characters, keep everything else
         let result = text.replace(/[\u0000-\u0013\u0015-\u001F\u007F-\u009F]/g, '');
         return result.trim();
     }
@@ -261,25 +298,42 @@
             document.getElementById('progress-fill').style.width = pct+'%';
         }
         allEntries.sort((a,b) => (a.title||"").localeCompare(b.title||""));
-        populateTopics();
+        populateFilters();
         renderSidebar();
         document.getElementById('loading-overlay').style.display='none';
     }
 
-    function populateTopics() {
+    function populateFilters() {
         let topics = new Set();
-        allEntries.forEach(e => (e.topics || []).forEach(t => topics.add(t)));
-        const target = document.getElementById('topic-list-target');
+        let bases = new Set();
+        allEntries.forEach(e => {
+            (e.topics || []).forEach(t => topics.add(t));
+            if(e.base) bases.add(e.base.split('/')[0]);
+        });
+        
+        const topicTarget = document.getElementById('topic-list-target');
         Array.from(topics).sort().forEach(t => {
             let d = document.createElement('div');
             d.className = 'dropdown-item';
             d.innerText = t;
-            d.onclick = () => { activeTopic = t; document.getElementById('topic-trigger').innerText = t; toggleDropdown(); renderSidebar(); };
-            target.appendChild(d);
+            d.onclick = () => { activeTopic = t; document.getElementById('topic-trigger').innerText = t; toggleDropdown('topic'); renderSidebar(); };
+            topicTarget.appendChild(d);
+        });
+
+        const baseTarget = document.getElementById('base-list-target');
+        Array.from(bases).sort().forEach(b => {
+            let d = document.createElement('div');
+            d.className = 'dropdown-item';
+            d.innerText = b;
+            d.onclick = () => { activeBase = b; document.getElementById('base-trigger').innerText = b; toggleDropdown('base'); renderSidebar(); };
+            baseTarget.appendChild(d);
         });
     }
 
-    function toggleDropdown() { document.getElementById('topic-menu').classList.toggle('show'); }
+    function toggleDropdown(type) { 
+        const id = type === 'topic' ? 'topic-menu' : 'base-menu';
+        document.getElementById(id).classList.toggle('show'); 
+    }
 
     function highlight(text, query) {
         if (!query || query.length < 2) return text;
@@ -292,7 +346,8 @@
         const filtered = allEntries.filter(e => {
             const matchQ = (e.title + e.words).toLowerCase().includes(query);
             const matchT = !activeTopic || (e.topics || []).includes(activeTopic);
-            return matchQ && matchT;
+            const matchB = !activeBase || (e.base || '').startsWith(activeBase);
+            return matchQ && matchT && matchB;
         });
         document.getElementById('stat-count').innerText = `${filtered.length.toLocaleString()} items`;
         
@@ -326,7 +381,7 @@
                 ${checkedUids.size > 0 ? `<button class="btn btn-orange" onclick="bulkExport()">📦 Export ${checkedUids.size}</button>` : ''}
             </div>
             <div class="scroll-content">
-                <h1 id="export-title" style="color:#f59e0b; margin-bottom:20px;">${highlight(selected.title, query)}</h1>
+                <h1 id="export-title" style="color:#007bff; margin-bottom:20px;">${highlight(selected.title, query)}</h1>
                 
                 <div style="margin: 20px 0;">
                     <div class="section-title">Topics</div>
@@ -344,7 +399,7 @@
 
                 <div style="margin: 20px 0;">
                     <div class="section-title">Content</div>
-                    <div id="sermon-display" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 11pt; color: #e5e7eb;">${highlight(displayText, query)}</div>
+                    <div id="sermon-display" style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; font-size: 14pt; color: #333; background: #fafafa; padding: 20px; border-radius: 8px; border: 1px solid #ddd; line-height: 1.8;">${highlight(displayText, query)}</div>
                 </div>
             </div>
             <div class="file-indicator">
@@ -369,18 +424,16 @@
         document.execCommand('copy');
         document.body.removeChild(storage);
         
-        // Show green notification on button
         const buttons = document.querySelectorAll('.btn');
         const btn = Array.from(buttons).find(b => b.innerText.includes('Copy'));
         if (btn) {
             const oldText = btn.innerText;
-            const oldBg = btn.className;
+            const oldClass = btn.className;
             btn.innerText = '✓ Copied!';
             btn.classList.add('btn-green');
-            btn.classList.remove('btn-gray');
             setTimeout(() => {
                 btn.innerText = oldText;
-                btn.className = oldBg;
+                btn.className = oldClass;
             }, 2000);
         }
     }
@@ -393,11 +446,9 @@
         const cleanedTitle = selected.title;
         const topics = (selected.topics || []).join(', ');
         const scriptures = (selected.scriptures || []).join(', ');
-        
-        // Convert newlines to HTML breaks for Word
         const contentWithBreaks = cleanedContent.replace(/\n/g, '<br>');
         
-        const htmlHeader = `<!DOCTYPE html>
+        const html = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -405,39 +456,85 @@
 body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.5; margin: 1in; }
 h1 { font-size: 16pt; font-weight: bold; margin-top: 0; margin-bottom: 12pt; }
 .section { margin: 12pt 0; }
-.label { font-weight: bold; color: #1e40af; margin-bottom: 6pt; }
+.label { font-weight: bold; color: #007bff; margin-bottom: 6pt; }
 .content { white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; font-size: 10pt; }
 </style>
 </head>
-<body>`;
-        
-        const content = `
+<body>
 <h1>${cleanedTitle}</h1>
-
 <div class="section">
 <div class="label">Topics:</div>
 <div>${topics || '(none)'}</div>
 </div>
-
 <div class="section">
 <div class="label">Scripture References:</div>
 <div>${scriptures || '(none)'}</div>
 </div>
-
 <div class="section">
 <div class="label">Content:</div>
 <div class="content">${contentWithBreaks}</div>
 </div>
-`;
+</body></html>`;
         
-        const htmlFooter = `</body></html>`;
-        const blob = new Blob([htmlHeader + content + htmlFooter], { type: 'application/vnd.ms-word.document' });
+        const blob = new Blob([html], { type: 'application/vnd.ms-word.document' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         link.download = `${cleanedTitle.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function bulkExport() {
+        if (checkedUids.size === 0) return;
+        let count = 0;
+        checkedUids.forEach(uid => {
+            const selected = allEntries.find(x => x._uid === uid);
+            if (!selected) return;
+            
+            const cleanedContent = cleanText(selected.words);
+            const cleanedTitle = selected.title;
+            const topics = (selected.topics || []).join(', ');
+            const scriptures = (selected.scriptures || []).join(', ');
+            const contentWithBreaks = cleanedContent.replace(/\n/g, '<br>');
+            
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.5; margin: 1in; }
+h1 { font-size: 16pt; font-weight: bold; margin-top: 0; margin-bottom: 12pt; }
+.section { margin: 12pt 0; }
+.label { font-weight: bold; color: #007bff; margin-bottom: 6pt; }
+.content { white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; font-size: 10pt; }
+</style>
+</head>
+<body>
+<h1>${cleanedTitle}</h1>
+<div class="section">
+<div class="label">Topics:</div>
+<div>${topics || '(none)'}</div>
+</div>
+<div class="section">
+<div class="label">Scripture References:</div>
+<div>${scriptures || '(none)'}</div>
+</div>
+<div class="section">
+<div class="label">Content:</div>
+<div class="content">${contentWithBreaks}</div>
+</div>
+</body></html>`;
+            
+            const blob = new Blob([html], { type: 'application/vnd.ms-word.document' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${cleanedTitle.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
+            setTimeout(() => link.click(), count * 200);
+            setTimeout(() => URL.revokeObjectURL(url), count * 200 + 1000);
+            count++;
+        });
     }
 
     function editSermon() {
@@ -462,7 +559,7 @@ h1 { font-size: 16pt; font-weight: bold; margin-top: 0; margin-bottom: 12pt; }
         selected.topics = document.getElementById('edit-topics').value.split(',').map(t => t.trim()).filter(t => t);
         selected.scriptures = document.getElementById('edit-scriptures').value.split(',').map(t => t.trim()).filter(t => t);
         selected._isDirty = true;
-        alert('âœ" Changes saved locally! (Sync to cloud coming soon)');
+        alert('✓ Changes saved locally!');
         closeEdit();
         setSelection(selectedUid);
     }
@@ -473,25 +570,22 @@ h1 { font-size: 16pt; font-weight: bold; margin-top: 0; margin-bottom: 12pt; }
             if (idx >= 0) {
                 allEntries.splice(idx, 1);
                 selectedUid = null;
-                document.getElementById('details-panel').innerHTML = '<div style="text-align:center; padding-top: 100px; color: #475569;"><h2>Select a sermon</h2></div>';
+                document.getElementById('details-panel').innerHTML = '<div style="text-align:center; padding-top: 100px; color: #999;"><h2>Select a sermon</h2></div>';
                 renderSidebar();
                 closeEdit();
             }
         }
     }
 
-    function bulkExport() {
-        alert("Preparing " + checkedUids.size + " sermons for export...");
-    }
-
     function resetApp() {
-        searchTimeout = null;
         activeTopic = '';
+        activeBase = '';
         selectedUid = null;
         checkedUids.clear();
         document.getElementById('main-search').value = '';
         document.getElementById('topic-trigger').innerText = 'Filter by Topic';
-        document.getElementById('details-panel').innerHTML = '<div style="text-align:center; padding-top: 100px; color: #475569;"><h2>Select a sermon</h2></div>';
+        document.getElementById('base-trigger').innerText = 'Filter by Source';
+        document.getElementById('details-panel').innerHTML = '<div style="text-align:center; padding-top: 100px; color: #999;"><h2>Select a sermon</h2></div>';
         renderSidebar();
     }
 
@@ -502,13 +596,24 @@ h1 { font-size: 16pt; font-weight: bold; margin-top: 0; margin-bottom: 12pt; }
 
     document.getElementById('topic-search-box').addEventListener('input', (e) => {
         let val = e.target.value.toLowerCase();
-        document.querySelectorAll('.dropdown-item').forEach(item => {
+        document.querySelectorAll('#topic-menu .dropdown-item').forEach(item => {
             item.style.display = item.innerText.toLowerCase().includes(val) ? 'block' : 'none';
         });
     });
 
-    window.onclick = (e) => { if (!e.target.closest('.dropdown-container')) document.getElementById('topic-menu').classList.remove('show'); };
-    loadData();
+    document.getElementById('base-search-box').addEventListener('input', (e) => {
+        let val = e.target.value.toLowerCase();
+        document.querySelectorAll('#base-menu .dropdown-item').forEach(item => {
+            item.style.display = item.innerText.toLowerCase().includes(val) ? 'block' : 'none';
+        });
+    });
+
+    window.onclick = (e) => { 
+        if (!e.target.closest('.dropdown-container')) {
+            document.getElementById('topic-menu').classList.remove('show');
+            document.getElementById('base-menu').classList.remove('show');
+        }
+    };
     </script>
 </body>
 </html>
