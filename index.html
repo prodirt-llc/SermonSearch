@@ -204,7 +204,6 @@
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     alphabet.push("OTH");
 
-    // Password: "password123" -> hashed to this value
     const PASSWORD_HASH = "79a70f9e9b1cfb62055d43e6935adf3ef549217fe567b17f83af6dd55385fe07";
 
     function sha256(str) {
@@ -273,7 +272,6 @@
         
         // Store topics for search
         allTopics = Array.from(topics).sort();
-        console.log('Total topics loaded:', allTopics.length);
         
         const topicTarget = document.getElementById('topic-list-target');
         topicTarget.innerHTML = '';
@@ -326,17 +324,6 @@
             return matchQ && matchT && matchB;
         });
         
-        if (activeTopic) {
-            console.log('Looking for topic:', activeTopic);
-            console.log('Sample entry topics:', allEntries.slice(0, 5).map(e => e.topics));
-            const matching = allEntries.filter(e => e.topics && e.topics.some(t => {
-                const clean = t.replace(/\n/g, ' ').trim();
-                return clean === activeTopic;
-            }));
-            console.log('Entries with this topic:', matching.length);
-        }
-        
-        console.log('Sidebar filter - query:', query, 'topic:', activeTopic, 'base:', activeBase, 'results:', filtered.length);
         document.getElementById('stat-count').textContent = `${filtered.length.toLocaleString()} items`;
         
         let listHtml = '';
