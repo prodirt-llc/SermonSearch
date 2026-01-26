@@ -204,7 +204,6 @@
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     alphabet.push("OTH");
 
-    // Password: "password123" -> hashed to this value
     const PASSWORD_HASH = "79a70f9e9b1cfb62055d43e6935adf3ef549217fe567b17f83af6dd55385fe07";
 
     function sha256(str) {
@@ -548,9 +547,8 @@ h1 { font-size: 16pt; font-weight: bold; margin-top: 0; margin-bottom: 12pt; }
                         activeTopic = t; 
                         const trigger = document.getElementById('topic-trigger');
                         if (trigger) trigger.textContent = t;
-                        toggleDropdown('topic'); 
-                        clearTimeout(searchTimeout);
-                        searchTimeout = setTimeout(renderSidebar, 100);
+                        toggleDropdown('topic');
+                        renderSidebar();
                     } catch(err) {
                         console.error('Topic click error:', err);
                     }
