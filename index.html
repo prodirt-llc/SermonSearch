@@ -312,7 +312,16 @@
         const query = document.getElementById('main-search').value.toLowerCase();
         const filtered = allEntries.filter(e => {
             const matchQ = (e.title + (e.words || '')).toLowerCase().includes(query);
-            const matchT = !activeTopic || (e.topics || []).includes(activeTopic);
+            
+            // Handle topic matching with newlines
+            let matchT = !activeTopic;
+            if (!matchT && e.topics) {
+                matchT = e.topics.some(t => {
+                    const cleanTopic = t.replace(/\n/g, ' ').trim();
+                    return cleanTopic === activeTopic;
+                });
+            }
+            
             const matchB = !activeBase || (e.base === activeBase);
             return matchQ && matchT && matchB;
         });
