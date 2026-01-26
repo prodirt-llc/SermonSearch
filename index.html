@@ -273,6 +273,7 @@
         
         // Store topics for search
         allTopics = Array.from(topics).sort();
+        console.log('Total topics loaded:', allTopics.length);
         
         const topicTarget = document.getElementById('topic-list-target');
         topicTarget.innerHTML = '';
@@ -523,12 +524,19 @@ h1 { font-size: 16pt; font-weight: bold; margin-top: 0; margin-bottom: 12pt; }
     let topicSearchTimeout = null;
     
     document.getElementById('topic-search-box').addEventListener('input', (e) => {
+        console.log('Topic search input:', e.target.value);
         clearTimeout(topicSearchTimeout);
         const val = e.target.value.toLowerCase();
         topicSearchTimeout = setTimeout(() => {
+            console.log('Filtering topics for:', val);
+            const start = performance.now();
             const filtered = val ? allTopics.filter(t => t.toLowerCase().includes(val)) : allTopics;
+            console.log('Filtered results:', filtered.length, 'in', performance.now() - start, 'ms');
+            
             const target = document.getElementById('topic-list-target');
             target.innerHTML = '';
+            
+            const renderStart = performance.now();
             filtered.slice(0, 100).forEach(t => {
                 let d = document.createElement('div');
                 d.className = 'dropdown-item';
@@ -536,6 +544,7 @@ h1 { font-size: 16pt; font-weight: bold; margin-top: 0; margin-bottom: 12pt; }
                 d.onclick = () => { activeTopic = t; document.getElementById('topic-trigger').textContent = t; toggleDropdown('topic'); renderSidebar(); };
                 target.appendChild(d);
             });
+            console.log('Rendered in', performance.now() - renderStart, 'ms');
         }, 150);
     });
 
